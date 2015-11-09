@@ -29,7 +29,7 @@ if any(y==-1); y(y==-1) = 2; end
 
 % Shape
 [M,N] = size(X);
-K = numel(unique(y));
+K = max(y);
 
 % Minimize loss
 W_star = minFunc(@mWLR_grad, zeros((M+1)*K,1), options, X, y, iw, p.Results.l2);
@@ -47,7 +47,7 @@ function [L, dL] = mWLR_grad(W,X,y,iw, lambda)
 
 % Shape
 [M,N] = size(X);
-K = numel(unique(y));
+K = max(y);
 W0 = reshape(W(M*K+1:end), [1 K]);
 W = reshape(W(1:M*K), [M K]);
 

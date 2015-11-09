@@ -35,23 +35,15 @@ options.Method = 'lbfgs';
 options.Display = 'final';
 
 % Number of classes
-K = numel(unique(y));
+K = max(y);
 
 % Check for y in {1,..K}
 y(y== 0) = 2;
 y(y==-1) = 2;
 
-% Z-score domains
-X = da_prep(X, 'zscore');
-Z = da_prep(Z, 'zscore');
-
-% Remove nans
-X(isnan(X)) = 0;
-Z(isnan(Z)) = 0;
-
 % Covariance
-SQ = 1./NQ*(X*X');
-SP = 1./NP*(Z*Z');
+SQ = cov(X');
+SP = cov(Z');
 
 % Remove nans (result from sparsity)
 SQ(isnan(SQ)) = 0;
@@ -83,7 +75,7 @@ function [L, dL] = mLR_grad(W, X, y, lambda)
 
 % Shape
 [M,N] = size(X);
-K = numel(unique(y)); if K==1; K=2; end
+K = max(y);
 W0 = reshape(W(M*K+1:end), [1 K]);
 W = reshape(W(1:M*K), [M K]);
 
@@ -107,8 +99,6 @@ if nargout > 1
     pos_E0 = zeros(1, K);
     for k=1:K
         pos_E(:,k) = sum(X(:,y == k), 2);
-    end
-    for k=1:K
         pos_E0(k) = sum(y == k);
     end
     

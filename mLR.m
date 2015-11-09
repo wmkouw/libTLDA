@@ -1,28 +1,34 @@
-% Function to estimate reweighting coefficients for instance reweighting
-function [iw] = irw_est_log(X, Z, lambda)
-% Function expects MxN matrices.
+function [W] = mLR(X,y,lambda)
+% Function that performs multiclass logistic regression
+% Assumes DxN data
 
-% Parse input
-if ~exist('lambda', 'var'); lambda = 1; end
-
-% Dependencies
 addpath(genpath('minFunc'));
 
-% Shape
-[M0,N0] = size(X);
-[M1,N1] = size(Z);
-Y = [ones(1,N0) 2*ones(1,N1)];
-
-% Run logistic regressor on domains
-options.DerivativeCheck = 'off';
-options.method = 'lbfgs';
+% Optimization options
 options.Display = 'final';
+options.Method = 'lbfgs';
 
-w = minFunc(@mLR_grad, randn((M0+1)*2,1), options, [X Z], Y, lambda);
-w2 = [w(1:M0); w(end-1)];
+% Check for bias augmentation
+if ~all(X(end,:)==1); X = [X; ones(1,size(X,2))]; end
 
-% Calculate posterior over samples of X0
-iw = 1./(1+exp(-w2'*[X; ones(1,N0)]));
+% Shape
+[M,N] = size(X);
+
+% Check vector y
+if size(y,1)~=N; y = y'; end
+
+% Check for y in {1,..K}
+y(y== 0) = 2;
+y(y==-1) = 2;
+
+% Number of classes
+K = max(y);
+
+% Minimize loss
+w = minFunc(@mLR_grad, zeros(M*K,1), options, X(1:end-1,:),y,lambda);
+
+% Reshape into K-class matrix
+W = [reshape(w(1:end-K), [M-1 K]); w(end-K+1:end)'];
 
 end
 
@@ -34,7 +40,7 @@ function [L, dL] = mLR_grad(W,X,y, lambda)
 
 % Shape
 [M,N] = size(X);
-K = numel(unique(y)); if K==1; K=2; end
+K = max(y); 
 W0 = reshape(W(M*K+1:end), [1 K]);
 W = reshape(W(1:M*K), [M K]);
 
@@ -54,21 +60,21 @@ L = L + lambda .* sum([W(:); W0(:)] .^ 2);
 if nargout > 1
     
     % Compute positive part of gradient
-    pos_E = zeros(M, K);
+	pos_E = zeros(M, K);
     pos_E0 = zeros(1, K);
     for k=1:K
-        pos_E(:,k) = sum(X(:,y == k), 2);
+        pos_E(:,k) = sum(X(:,y == k), 2);            
     end
     for k=1:K
         pos_E0(k) = sum(y == k);
     end
     
-    % Compute negative part of gradient
+    % Compute negative part of gradient    
     neg_E = X * WX';
     neg_E0 = sum(WX, 2)';
-    
-    % Compute gradient
-    dL = -[pos_E(:) - neg_E(:); pos_E0(:) - neg_E0(:)] + 2 .* lambda .* [W(:); W0(:)];
+        
+	% Compute gradient
+	dL = -[pos_E(:) - neg_E(:); pos_E0(:) - neg_E0(:)] + 2 .* lambda .* [W(:); W0(:)];
     
 end
 end

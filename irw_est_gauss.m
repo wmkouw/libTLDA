@@ -1,6 +1,9 @@
 % Function to do ML estimation of the transfer parameter q.
-function [iw] = irw_est_gauss(X, Z)
+function [iw] = irw_est_gauss(X, Z, lambda)
 % Function expects MxN matrices.
+
+% Parse input
+if ~exist('lambda', 'var'); lambda = 1; end
 
 % Shape
 [M,N] = size(X);
@@ -10,8 +13,8 @@ mu0 = mean(X,2);
 mu1 = mean(Z,2);
 X0_ = bsxfun(@minus, X, mu0);
 X1_ = bsxfun(@minus, Z, mu1);
-S0 = 1./N .* (X0_*X0_' + 1*eye(M));
-S1 = 1./N .* (X1_*X1_' + 1*eye(M));
+S0 = 1./N .* (X0_*X0_' + lambda*eye(M));
+S1 = 1./N .* (X1_*X1_' + lambda*eye(M));
 L0 = chol(S0, 'lower');
 L1 = chol(S1, 'lower');
 
