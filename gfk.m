@@ -31,7 +31,7 @@ G = GFK([PX,null(PX')], PZ);
 % Perform classification
 switch p.Results.clf
     case {'1nn', '1-nn'}
-        [pred] = my_kernel_knn(G, X', yX', Z');
+        [pred] = kknn(G, X', yX', Z');
     case {'lr', 'log'}
         options.Display = 'final';
         W = minFunc(@mLR_grad, zeros((MX+1)*K,1), options, G*X, yX, p.Results.l2);
@@ -118,9 +118,9 @@ if nargout > 1
 end
 end
 
-function [pred] = my_kernel_knn(M, Xr, Yr, Xt)
+function [pred] = kknn(M, Xr, Yr, Xt)
 
-% Calculate distance
+% Calculate distance according to GFK metric
 dist = repmat(diag(Xr*M*Xr'),1,size(Xt,1)) ...
     + repmat(diag(Xt*M*Xt')',length(Yr),1)...
     - 2*Xr*M*Xt';

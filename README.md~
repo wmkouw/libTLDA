@@ -5,7 +5,7 @@ Dependencies: <br>
 - MinFunc (https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html)
 
 Usage: <br>
-- Supply labeled source data (XQ,yQ) and target data (XP) and the methods output a trained linear classifier or a label prediction for XP. <br>
+- Supply labeled source data (XQ,yQ) and target data (XP) and the methods output a trained classifier or a label prediction for XP. <br>
 
 Contains:<br>
 - irw: Instance Reweighting (includes importance weight estimation methods such as Kernel Mean Matching from Huang et al., 2006) <br>

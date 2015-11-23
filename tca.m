@@ -1,8 +1,9 @@
 function [W,M,pred,err] = tca(X,Z,yX,yZ,varargin)
-% Function to perform Transfer Component Analysis
+% Function to train a domain adaptive classifier using Transfer Component Analysis
+%
 % Pan, Tsang, Kwok, Yang (2009). Domain Adaptation via Transfer Component Analysis.
 
-addpath(genpath('~/Codes/minFunc'));
+addpath(genpath('minFunc'));
 
 % Shapes
 [~,NX] = size(X);
@@ -35,7 +36,7 @@ end
 
 
 function [M,K] = tc(X,Z,varargin)
-% At the moment, only a radial basis function kernel implemented
+% At the moment, only a radial basis function kernel is implemented
 
 % Parse input
 p = inputParser;
