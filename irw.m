@@ -244,7 +244,7 @@ WX = bsxfun(@rdivide, WX, max(sum(WX, 1), realmin));
 % Negative log-likelihood of each sample
 L = 0;
 for i=1:N
-    L = L - log(max(iw(i)*WX(y(i), i), realmin));
+    L = L - iw(i)*log(WX(y(i), i)));
 end
 L = L + lambda .* sum([W(:); W0(:)] .^ 2);
 
@@ -256,9 +256,7 @@ if nargout > 1
     pos_E0 = zeros(1, K);
     for k=1:K
         pos_E(:,k) = sum(bsxfun(@times, iw(y == k), X(:,y == k)), 2);
-    end
-    for k=1:K
-        pos_E0(k) = sum(y == k);
+        pos_E0(k) = sum(y == k)+sum(iw(y==k));
     end
     
     % Compute negative part of gradient
