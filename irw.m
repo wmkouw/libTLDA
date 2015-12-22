@@ -5,14 +5,14 @@ function [W,theta] = irw(XQ,XP,yQ,varargin)
 %           yQ      source labels (NQ x 1)
 % Optional:
 %           l2      Additional l2-regularization parameters (default: 1e-3)
-%           td      Transfer distribution (default: 'blankout')
+%           iw      Choice of importance weight estimation method (default: 'log')
 %           loss    Choice of loss function (default: 'log')
 %
 % Output:   W       Trained linear classifier
-%           theta   parameters of the blankout transfer distribution
+%           theta   Found importance weights for source samples
 %
 % Wouter M. Kouw
-% Last update: 23-11-2015
+% Last update: 22-12-2015
 
 % Parse optionals
 p = inputParser;
@@ -157,69 +157,45 @@ end
 
 function [iw] = iw_log(X, Z, l2)
 % Function to estimate importance weights using a logistic regressor
-%
-% Function expects MxN matrices.
+% Wouter Kouw
+% 22-12-2015
+% X,Z = MxN matrices
 
 % Shape
 [M0,N0] = size(X);
 [~,N1] = size(Z);
-Y = [ones(1,N0) 2*ones(1,N1)];
+Y = [zeros(NX,1); ones(NZ,1)];
 
 % Run logistic regressor on domains
 options.method = 'lbfgs';
 options.Display = 'final';
 
-w = minFunc(@mLR_grad, randn((M0+1)*2,1), options, [X Z], Y, l2);
-w2 = [w(1:M0); w(end-1)];
+% Minimize loss
+w = minFunc(@LR_grad, randn(M+1,1), options, [X Z]', Y, lambda);
 
-% Calculate posterior over samples of X0
-iw = 1./(1+exp(-w2'*[X; ones(1,N0)]));
+% Calculate p(y=1|x)
+iw = exp(w'*[X; ones(1,NX)])./(1+exp(w'*[X; ones(1,NX)]));
 
 end
 
-function [L, dL] = mLR_grad(W,X,y, lambda)
+function [L, dL] = LR_grad(w,D,y, ld)
 % Implementation of logistic regression
 % Wouter Kouw
-% 29-09-2014
-% This function expects an 1xN label vector y with labels [1,..,K]
+% 22-12-2015
+% This function expects y in [0,1] and no augmentation for X
 
 % Shape
-[M,N] = size(X);
-K = numel(unique(y)); if K==1; K=2; end
-W0 = reshape(W(M*K+1:end), [1 K]);
-W = reshape(W(1:M*K), [M K]);
+[N,~] = size(D);
+D = [D ones(N,1)];
 
-% Compute p(y|x)
-WX = bsxfun(@plus, W' * X, W0');
-WX = exp(bsxfun(@minus, WX, max(WX, [], 1)));
-WX = bsxfun(@rdivide, WX, max(sum(WX, 1), realmin));
-
-% Negative log-likelihood of each sample
-L = 0;
-for i=1:N
-    L = L - log(max(WX(y(i), i), realmin));
-end
-L = L + lambda .* sum([W(:); W0(:)] .^ 2);
+% Logistic loss
+L = -1./N*sum(y.*(D*w) - log(1+exp(D*w)),1) + ld*sum(w.^2);
 
 % Only compute gradient if requested
 if nargout > 1
     
-    % Compute positive part of gradient
-    pos_E = zeros(M, K);
-    pos_E0 = zeros(1, K);
-    for k=1:K
-        pos_E(:,k) = sum(X(:,y == k), 2);
-    end
-    for k=1:K
-        pos_E0(k) = sum(y == k);
-    end
-    
-    % Compute negative part of gradient
-    neg_E = X * WX';
-    neg_E0 = sum(WX, 2)';
-    
-    % Compute gradient
-    dL = -[pos_E(:) - neg_E(:); pos_E0(:) - neg_E0(:)] + 2 .* lambda .* [W(:); W0(:)];
+    % Gradient with respect to w
+    dL = -1./N*(D'*y - D'*(exp(D*w)./(1+exp(D*w)))) + 2*ld*w;
     
 end
 end
@@ -246,7 +222,7 @@ L = 0;
 for i=1:N
     L = L - iw(i)*log(WX(y(i), i)));
 end
-L = L + lambda .* sum([W(:); W0(:)] .^ 2);
+L = L./N + lambda .* sum([W(:); W0(:)] .^ 2);
 
 % Only compute gradient if requested
 if nargout > 1
@@ -256,15 +232,15 @@ if nargout > 1
     pos_E0 = zeros(1, K);
     for k=1:K
         pos_E(:,k) = sum(bsxfun(@times, iw(y == k), X(:,y == k)), 2);
-        pos_E0(k) = sum(y == k)+sum(iw(y==k));
+        pos_E0(k) = sum(iw(y == k));
     end
     
     % Compute negative part of gradient
     neg_E = bsxfun(@times, iw, X) * WX';
-    neg_E0 = sum(WX, 2)';
+    neg_E0 = sum(bsxfun(@times, iw, WX), 2)';
     
     % Compute gradient
-    dL = -[pos_E(:) - neg_E(:); pos_E0(:) - neg_E0(:)] + 2 .* lambda .* [W(:); W0(:)];
+    dL = -1./N*[pos_E(:) - neg_E(:); pos_E0(:) - neg_E0(:)] + 2 .* lambda .* [W(:); W0(:)];
     
 end
 end
