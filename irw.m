@@ -189,16 +189,17 @@ function [L, dL] = LR_grad(w,D,y, ld)
 D = [D ones(N,1)];
 
 % Numerical stability trick
-ma = max(D*w, [], 2);
+Dw = D*w;
+ma = max(0,max(Dw, [], 2));
 
 % Logistic loss
-L = -1./N*sum(y.*(D*w) - log(exp(-ma)+exp(D*w-ma)) - ma,1) + ld*sum(w.^2);
+L = -1./N*sum(y.*(Dw) - log(exp(-ma)+exp(Dw-ma)) - ma,1) + ld*sum(w.^2);
 
 % Only compute gradient if requested
 if nargout > 1
     
     % Gradient with respect to w
-    dL = -1./N*(D'*y - D'*(exp(D*w-ma)./(exp(-ma)+exp(D*w-ma)))) + 2*ld*w;
+    dL = -1./N*(D'*y - D'*(exp(Dw-ma)./(exp(-ma)+exp(Dw-ma)))) + 2*ld*w;
     
 end
 end
