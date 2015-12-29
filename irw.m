@@ -224,7 +224,7 @@ WX = bsxfun(@rdivide, WX, max(sum(WX, 1), realmin));
 % Negative log-likelihood of each sample
 L = 0;
 for i=1:N
-    L = L - iw(i)*log(WX(y(i), i)));
+    L = L - iw(i)*log(max(WX(y(i), i),realmin));
 end
 L = L./N + lambda .* sum([W(:); W0(:)] .^ 2);
 
