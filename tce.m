@@ -143,7 +143,7 @@ switch model
         ll_ref = ll_lda(pi_ref,mu_ref,La_ref,Z);
         
         % Initialize target posterior
-        q = min(max(myprojsplx(ll_ref), realmin), 1-realmin);
+        q = min(max(proj_splx(ll_ref), realmin), 1-realmin);
         
         disp('Starting MCPL optimization');
         llmm = Inf;
@@ -173,7 +173,7 @@ switch model
             Dq = ll_mcpl - ll_ref;
             
             % Apply gradient and project back onto simplex
-            q = min(max(myprojsplx(q - Dq./(p.Results.alpha+n)), realmin), 1-realmin);
+            q = min(max(proj_splx(q - Dq./(p.Results.alpha+n)), realmin), 1-realmin);
             
             % Visualize
             if p.Results.viz
