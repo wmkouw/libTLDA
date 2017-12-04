@@ -1,11 +1,8 @@
-# LibTLDA: library of transfer learning and domain-adaptive classifiers
+# LibTLDA: transfer learning and domain-adaptive classifiers
 Warning: development is ongoing. All usage is at your own risk.
 
 ## Installation:
 For Matlab, add the file of the classifier to your path.
-
-## Usage:
-- Supply labeled source data (X,yX) and target data (Z) and the methods output a trained linear classifier or a label prediction for Z. <br>
 
 ## Python:
 Python translations and implementations will arrive shortly.
@@ -13,6 +10,9 @@ Python translations and implementations will arrive shortly.
 ## Matlab:
 Dependencies: <br>
 - MinFunc (https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html)
+
+Usage: <br>
+- Supply labeled source data (X,yX) and target data (Z) and the methods output a trained linear classifier or a label prediction for Z. <br>
 
 Contains:<br>
 - irw: Instance Reweighting <br>
