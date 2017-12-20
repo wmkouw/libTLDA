@@ -1,124 +1,120 @@
-function [F,theta,Pp] = scl(XQ,XP,yQ,varargin)
+function [W,C,preds] = scl(X,Z,y,varargin)
 % Implementation of a structural correspondence learning classifier
+% Assumes Bag-of-Words encoding with count features
 %
-% Ref: J. Blitzer,R. McDonald & F. Pereira (2006). Domain adaptation with
-% Structural Correspondence Learning. EMNLP
+% Reference: Blitzer et al. (2006), Domain adaptation with structural
+% correspondence learning. EMNLP.
+%
+% Input:    X       source data (N samples x D features)
+%           Z       target data (M samples x D features)
+%           y       source labels (N x 1) in {1,...,K}
+% Optional:
+%           l2      additional l2-regularization parameters (default: 1e-3)
+%           m       number of pivot features (default: 20)
+%           h       number of pivot components (default: 15)
+%
+% Output:   W       trained linear classifier
+%           C       pivot predictor weight components
+%           preds   predictions by trained classifier on target data
 %
 % Copyright: Wouter M. Kouw
 % Last update: 19-12-2017
 
+% Add dependencies to path
+addpath(genpath('util'));
 addpath(genpath('minFunc'));
 
-% Shape
-[MQ,~] = size(XQ);
-[MP,~] = size(XP);
-
-% Parse hyperparameters
-p = inputParser;
-addOptional(p, 'l2', 0);
-addOptional(p, 'm', 20);
-addOptional(p, 'h', 15);
-parse(p, varargin{:});
-
-% Check for y in {1,..K}
-if any(yQ==0) || any(yQ==-1); error('y not in [1,..K]'); end
-K = max(yQ);
-
-% Optimization options
+% Check for solver
+if isempty(which('minFunc')); error('Can not find minFunc'); end
 options.DerivativeCheck = 'off';
 options.Method = 'lbfgs';
 options.Display = 'final';
 
-% Choose m pivot features;
-[~,ix1] = sort(sum(XQ,2)+sum(XP,2), 'descend');
-pivot = [XQ(ix1(1:p.Results.m),:) XP(ix1(1:p.Results.m),:)];
-pivot(pivot>0) = 1;
+% Parse hyperparameters
+p = inputParser;
+addOptional(p, 'l2', 0);
+addOptional(p, 'm',  2);
+addOptional(p, 'h',  2);
+parse(p, varargin{:});
+
+% Data shape
+[N,D] = size(X);
+[M,E] = size(Z);
+labels = unique(y);
+K = length(labels);
+
+% Check if dimensionalities are the same
+if D~=E; error('Data dimensionalities not the same in both domains'); end
+
+% Check if labels are in [1,...,K]
+if ~isempty(setdiff(labels,1:K)); error('Labels should be in [1,...,K]'); end
+
+% Check for bias augmentation
+if ~all(X(:,end)==1) && ~all(Z(:,end)==1)
+    X = [X ones(N,1)];
+    Z = [Z ones(M,1)];
+    D = D+1;
+end
+
+% Find indices of m most frequent features (assumes BoW encoding)
+[~,ix] = sort(sum([X(:,1:end-1); Z(:,1:end-1)],1), 'descend');
+ix = ix(1:p.Results.m);
+
+% Slice out pivot features and relabel them as present(=1)/absent(=0)
+pivot = [X(:,ix); Z(:,ix)];
+pivot = double(pivot>0);
 
 % Solve m binary prediction tasks
-Pp = zeros(MQ,p.Results.m);
+P = zeros(D,p.Results.m);
 for l = 1:p.Results.m
     disp(['Pivot feature #' num2str(l)]);
-    Pp(:,l) = minFunc(@Huber_grad, randn(MQ,1), options, [XQ XP], pivot(p.Results.m,:), p.Results.l2);
+    P(:,l) = minFunc(@Huber_grad, rand(D,1), options, [X; Z], pivot(:,l), p.Results.l2);
 end
-clear pivot XP
 
-% Decompose pivot predictors
-[theta,~] = eigs(cov(Pp'), p.Results.h);
-theta = theta';
+% Decompose pivot predictor matrix into h components
+[C,~] = eigs(cov(P'), p.Results.h);
+
+% Augment features
+Xa = [X*C, X];
+Za = [Z*C, Z];
 
 % Minimize loss
-f = minFunc(@mLR_grad, randn((MQ+p.Results.h+1)*K,1), options, [XQ; theta*XQ], yQ(:)', p.Results.l2);
+W = mLR(Xa, y, 'l2', p.Results.l2);
 
-% Output MxK weight matrix
-F = [reshape(f(1:end-K), [MQ+p.Results.h K]); f(end-K+1:end)'];
-
-end
-
-function [L, dL] = mLR_grad(W,X,y, lambda)
-% Implementation of logistic regression
-% Wouter Kouw
-% 29-09-2014
-% This function expects an 1xN label vector y with labels [1,..,K]
-
-% Shape
-[M,N] = size(X);
-K = max(y);
-W0 = reshape(W(M*K+1:end), [1 K]);
-W = reshape(W(1:M*K), [M K]);
-
-% Compute p(y|x)
-WX = bsxfun(@plus, W' * X, W0');
-WX = exp(bsxfun(@minus, WX, max(WX, [], 1)));
-WX = bsxfun(@rdivide, WX, max(sum(WX, 1), realmin));
-
-% Negative log-likelihood of each sample
-L = 0;
-for i=1:N
-    L = L - log(max(WX(y(i), i), realmin));
-end
-L = L + lambda .* sum([W(:); W0(:)] .^ 2);
-
-% Only compute gradient if requested
-if nargout > 1
-
-    % Compute positive part of gradient
-	pos_E = zeros(M, K);
-    pos_E0 = zeros(1, K);
-    for k=1:K
-        pos_E(:,k) = sum(X(:,y == k), 2);
-    end
-    for k=1:K
-        pos_E0(k) = sum(y == k);
-    end
-
-    % Compute negative part of gradient
-    neg_E = X * WX';
-    neg_E0 = sum(WX, 2)';
-
-	% Compute gradient
-	dL = -[pos_E(:) - neg_E(:); pos_E0(:) - neg_E0(:)] + 2 .* lambda .* [W(:); W0(:)];
+% Make predictions
+[~,preds] = max(Za*W, [], 2);
 
 end
-end
 
-function [L,dL] = Huber_grad(w,X,y,la)
+function [L,dL] = Huber_grad(w,X,y, l2)
 % Modified Huber loss function
-% R. Ando & T. Zhang (2005a). A framework for learning predictive
+%
+% Reference: Ando & Zhang (2005a). A framework for learning predictive 
 % structures from multiple tasks and unlabeled data. JMLR.
 
 % Precompute
 Xy = bsxfun(@times, X, y);
-wXy = w'*Xy;
+Xyw = Xy*w;
 
 % Indices of discontinuity
-ix = (wXy>=-1);
+ix = (Xyw >= -1);
 
 % Loss
-L = sum(max(0,1-wXy(ix)).^2,2) + sum(-4*wXy(~ix),2);
-dL = sum(bsxfun(@times, 2*max(0,1-wXy(ix)), (-Xy(:,ix))),2) + sum(-4*Xy(:,~ix),2);
+L = sum(max(0, 1 - Xyw(ix)).^2,1) ...
+    + sum(-4*Xyw(~ix),1);
 
 % Add l2-regularization
-L = L + la*sum(w.^2);
-dL = dL + 2*la*w;
+L = L + l2*sum(w.^2);
+
+if nargout > 1
+    
+    % Gradient
+    dL = sum(bsxfun(@times, 2*max(0,1-Xyw(ix)), (-Xy(ix,:))),1) ...
+        + sum(-4*Xy(~ix,:),1);
+    
+    % Add l2-regularization
+    dL = dL' + 2*l2*w;
+
+end
 
 end
