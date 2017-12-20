@@ -1,7 +1,11 @@
 function [F,theta,Pp] = scl(XQ,XP,yQ,varargin)
-% Function to calculate structural correspondence learning
-% J. Blitzer,R. McDonald & F. Pereira (2006). Domain adaptation with
+% Implementation of a structural correspondence learning classifier
+%
+% Ref: J. Blitzer,R. McDonald & F. Pereira (2006). Domain adaptation with
 % Structural Correspondence Learning. EMNLP
+%
+% Copyright: Wouter M. Kouw
+% Last update: 19-12-2017
 
 addpath(genpath('minFunc'));
 
@@ -40,7 +44,7 @@ clear pivot XP
 
 % Decompose pivot predictors
 [theta,~] = eigs(cov(Pp'), p.Results.h);
-theta = theta'; 
+theta = theta';
 
 % Minimize loss
 f = minFunc(@mLR_grad, randn((MQ+p.Results.h+1)*K,1), options, [XQ; theta*XQ], yQ(:)', p.Results.l2);
@@ -58,7 +62,7 @@ function [L, dL] = mLR_grad(W,X,y, lambda)
 
 % Shape
 [M,N] = size(X);
-K = max(y); 
+K = max(y);
 W0 = reshape(W(M*K+1:end), [1 K]);
 W = reshape(W(1:M*K), [M K]);
 
@@ -76,29 +80,29 @@ L = L + lambda .* sum([W(:); W0(:)] .^ 2);
 
 % Only compute gradient if requested
 if nargout > 1
-    
+
     % Compute positive part of gradient
 	pos_E = zeros(M, K);
     pos_E0 = zeros(1, K);
     for k=1:K
-        pos_E(:,k) = sum(X(:,y == k), 2);            
+        pos_E(:,k) = sum(X(:,y == k), 2);
     end
     for k=1:K
         pos_E0(k) = sum(y == k);
     end
-    
-    % Compute negative part of gradient    
+
+    % Compute negative part of gradient
     neg_E = X * WX';
     neg_E0 = sum(WX, 2)';
-        
+
 	% Compute gradient
 	dL = -[pos_E(:) - neg_E(:); pos_E0(:) - neg_E0(:)] + 2 .* lambda .* [W(:); W0(:)];
-    
+
 end
 end
 
 function [L,dL] = Huber_grad(w,X,y,la)
-% Modified Huber loss function 
+% Modified Huber loss function
 % R. Ando & T. Zhang (2005a). A framework for learning predictive
 % structures from multiple tasks and unlabeled data. JMLR.
 
@@ -112,7 +116,7 @@ ix = (wXy>=-1);
 % Loss
 L = sum(max(0,1-wXy(ix)).^2,2) + sum(-4*wXy(~ix),2);
 dL = sum(bsxfun(@times, 2*max(0,1-wXy(ix)), (-Xy(:,ix))),2) + sum(-4*Xy(:,~ix),2);
-    
+
 % Add l2-regularization
 L = L + la*sum(w.^2);
 dL = dL + 2*la*w;

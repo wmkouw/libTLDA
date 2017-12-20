@@ -1,9 +1,10 @@
 function [pred,G] = gfk(X,Z,yX,varargin)
-% Implementation of a Geodesic Flow Kernel for Domain Adaptation
+% Implementation of Geodesic Flow Kernel classifier
 %
-% ref: Geodesic Flow Kernel for Unsupervised Domain Adaptation.
-% B. Gong, Y. Shi, F. Sha, and K. Grauman.
-% Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR), Providence, RI, June 2012.
+% Reference: Geodesic Flow Kernel for Unsupervised Domain Adaptation. Gong, et al. (2008). CVPR.
+%
+% Copyright: Wouter M. Kouw
+% Last update: 19-12-2017
 
 % Check sizes
 [MX,NX] = size(X);
@@ -99,7 +100,7 @@ L = L + lambda .* sum([W(:); W0(:)] .^ 2);
 
 % Only compute gradient if requested
 if nargout > 1
-    
+
     % Compute positive part of gradient
     pos_E = zeros(M, K);
     pos_E0 = zeros(1, K);
@@ -107,14 +108,14 @@ if nargout > 1
         pos_E(:,k) = sum(X(:,y == k), 2);
         pos_E0(k) = sum(y == k);
     end
-    
+
     % Compute negative part of gradient
     neg_E = X * WX';
     neg_E0 = sum(WX, 2)';
-    
+
     % Compute gradient
     dL = -[pos_E(:) - neg_E(:); pos_E0(:) - neg_E0(:)] + 2 .* lambda .* [W(:); W0(:)];
-    
+
 end
 end
 

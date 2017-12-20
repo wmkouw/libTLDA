@@ -1,5 +1,6 @@
 function [W,M,pred,varargout] = tca(X,Z,yX,varargin)
-% Function to perform Transfer Component Analysis.
+% Implementation of a Transfer Component Analysis classifier
+%
 % Ref: Pan, Tsang, Kwok, Yang (2009). Domain Adaptation via Transfer Component Analysis.
 %
 % Input:    X       source data (D features x N samples)
@@ -19,7 +20,7 @@ function [W,M,pred,varargout] = tca(X,Z,yX,varargin)
 %           {1}     Error of target label predictions
 %
 % Copyright: Wouter M. Kouw
-% Last update: 04-04-2016
+% Last update: 19-12-2017
 
 addpath(genpath('~/Codes/minFunc'));
 
@@ -110,7 +111,7 @@ if ~all(X(end,:)==1); X = [X; ones(1,size(X,2))]; end
 [D,N] = size(X);
 
 % Number of classes
-K = numel(unique(y)); 
+K = numel(unique(y));
 
 % Check column vector y
 if size(y,1)~=N; y = y'; end
@@ -135,7 +136,7 @@ function [L, dL] = mLR_grad(W,X,y, lambda)
 
 % Shape
 [D,N] = size(X);
-K = numel(unique(y)); 
+K = numel(unique(y));
 W0 = reshape(W(D*K+1:end), [1 K]);
 W = reshape(W(1:D*K), [D K]);
 
@@ -153,21 +154,21 @@ L = L + lambda .* sum([W(:); W0(:)] .^ 2);
 
 % Only compute gradient if requested
 if nargout > 1
-    
+
     % Compute positive part of gradient
 	pos_E = zeros(D, K);
     pos_E0 = zeros(1, K);
     for k=1:K
-        pos_E(:,k) = sum(X(:,y == k), 2);            
+        pos_E(:,k) = sum(X(:,y == k), 2);
         pos_E0(k) = sum(y == k);
     end
-    
-    % Compute negative part of gradient    
+
+    % Compute negative part of gradient
     neg_E = X * WX';
     neg_E0 = sum(WX, 2)';
-        
+
 	% Compute gradient
 	dL = -[pos_E(:) - neg_E(:); pos_E0(:) - neg_E0(:)] + 2 .* lambda .* [W(:); W0(:)];
-    
+
 end
 end

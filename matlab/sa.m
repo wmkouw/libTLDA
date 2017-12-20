@@ -1,8 +1,8 @@
 function [W,EX,EZ] = sa(X,Z,y,varargin)
-% Function to train a domain adaptive classifier using Subspace Alignment
-% 
-% Fernando, B., Habrard, A., Sebban, M. & Tuytelaars, T. Subspace alignment
-% for domain adaption. ArXiv 2014
+% Implementation of a Subspace Alignment classifier.
+%
+% Reference: Fernando, et al. (2014). Subspace alignment for domain adaption. ICCV.
+$
 % Input:
 %    X is source set in MxN format (no augmentation)
 %    Z is target set in MxN format (no augmentation)
@@ -14,8 +14,8 @@ function [W,EX,EZ] = sa(X,Z,y,varargin)
 %    EX is source subspace
 %    EZ is target subspace (must be used to map novel target data on)
 %
-% Wouter Kouw
-% 15-09-2014
+% Copyright: Wouter M. Kouw
+% Last update: 19-12-2017
 
 % Dependencies
 addpath(genpath('minFunc'));
@@ -93,7 +93,7 @@ L = L + lambda .* sum([W(:); W0(:)] .^ 2);
 
 % Only compute gradient if requested
 if nargout > 1
-    
+
     % Compute positive part of gradient
     pos_E = zeros(M, K);
     pos_E0 = zeros(1, K);
@@ -101,13 +101,13 @@ if nargout > 1
         pos_E(:,k) = sum(X(:,y == k), 2);
         pos_E0(k) = sum(y == k);
     end
-    
+
     % Compute negative part of gradient
     neg_E = X * WX';
     neg_E0 = sum(WX, 2)';
-    
+
     % Compute gradient
     dL = -[pos_E(:) - neg_E(:); pos_E0(:) - neg_E0(:)] + 2 .* lambda .* [W(:); W0(:)];
-    
+
 end
 end

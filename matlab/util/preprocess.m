@@ -1,7 +1,8 @@
-function [X] = da_prep(X, prep)
-% Function to run a number of preprocessing routines on a dataset
+function [X] = preprocess(X, prep)
+% Implementation of a number of preprocessing routines on a dataset
+%
 % Input:
-%   X:      Dataset (MxN)
+%   X:      Dataset N x D
 %   prep:   cell array of preprocessing techniques
 % 
 % Output:
