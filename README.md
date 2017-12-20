@@ -4,10 +4,6 @@ Warning: development is ongoing. All usage is at your own risk.
 ## Installation:
 For Matlab, add the file of the classifier to your path.
 
-## Notation
-(X,y) corresponds to data from a source domain, with X as a N samples by D features matrix and y as a N by 1 label vector in {1,...,K}.
-(Z,u) corresponds to data from a target domain, with Z as a M samples by D features matrix and u as a M by 1 label vector in {1,...,K}.
-
 ## Matlab:
 Dependencies: <br>
 - MinFunc (https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html)
