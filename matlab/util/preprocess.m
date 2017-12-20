@@ -2,19 +2,19 @@ function [X] = preprocess(X, prep)
 % Implementation of a number of preprocessing routines on a dataset
 %
 % Input:
-%   X:      Dataset N x D
+%   X:      Dataset N samples by D features
 %   prep:   cell array of preprocessing techniques
-% 
+%
 % Output:
 %   X:      Preprocessed set
-% 
-% Last update: 21-11-2015
-% Author: Wouter Kouw
-% Pattern Recognition & Bioinformatics group
-% Delft University of Technology
+%
+% Last update: 20-12-2017
+% Author: Wouter M. Kouw
 
-[M,N] = size(X);
+% Shape
+[N,D] = size(X);
 
+% If single prep, wrap in cell
 if ischar(prep)
     prep = cellstr(prep);
 end
@@ -22,48 +22,36 @@ end
 for i = 1:length(prep)
     switch prep{i}
         case 'binarize'
-            X(X>=0.5) = 1;
-            X(X<0.5) = 0;
+            X = double(X>=0.5);
             disp(['Binarized the data (X>0.5=1, X<0.5=0)']);
-        case 'zscore'
-            X = bsxfun(@minus, X, mean(X,2));
-            v = std(X,0,2);
-            X = bsxfun(@rdivide, X, v);
-            X(v==0,:) = 0;
-            disp(['Z-scored each feature']);
+        case 'minus_mean'
+            X = bsxfun(@minus, X, mean(X, 1));
+            disp(['Subtracted each feature`s mean']);
         case 'minus_min'
-            X = bsxfun(@minus, X, min(X, [], 2));
-            disp(['Subtracted the minimum value for each feature']);
-        case 'minus_min_samp'
             X = bsxfun(@minus, X, min(X, [], 1));
-            disp(['Subtracted the minimum value for each sample']);
-        case 'tf-idf'
+            disp(['Subtracted each feature`s minimum value']);
+        case 'norm_max'
+            const = max(X,[],1);
+            X = bsxfun(@rdivide, X, const);
+            X(const==0,:) = 0;
+            disp(['Normalized each feature by max']);
+        case 'norm_sum'
+            const = mean(X,1);
+            X = bsxfun(@rdivide, X, const);
+            X(const==0,:) = 0;
+            disp(['Normalized each feature by sum']);
+        case 'norm_std'
+            const = std(X,0,1,'omitnan');
+            X = bsxfun(@rdivide, X, const);
+            X(const==0,:) = 0;
+            disp(['Normalized each feature by std. dev.']);
+        case 'zscore'
+            X = zscore(X,[],1);
+            disp(['Z-scored each feature']);
+        case 'tf_idf'
             df = log(N ./ (sum(X > 0, 2) + 1));
             X = bsxfun(@times, X, df);
-            disp(['Ran tf-idf features']);
-        case 'fmax'
-            m = max(X, [], 2);
-            X = bsxfun(@rdivide, X, m);
-            X(m==0,:) = 0;
-            disp(['Scaled each feature to max 1']);
-        case 'fsum'
-            X = bsxfun(@rdivide, X, sum(X, 2));
-            disp(['Normalized each feature']);
-        case 'fstd'
-            v = std(X,0,2,'omitnan');
-            X = bsxfun(@rdivide, X, v);
-            X(v==0,:) = 0;
-            disp(['Normalized feature variance to 1']);
-        case 'norm_samp'
-            X = bsxfun(@rdivide, X, sqrt(sum(X.^2,1)));
-            disp(['Normalized each sample by its norm']);
-        case 'sum_samp'
-            v = sum(X,1);
-            X = bsxfun(@rdivide, X, v);
-            X(isnan(X)) = 0;
-            disp(['Normalized each sample by its sum']);
-        case ''
-            disp(['No data preprocessing']);
+            disp(['Extracted tf-idf features']);
         otherwise
             error([prep{i} ' has not been implemented']);
     end
