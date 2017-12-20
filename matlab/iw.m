@@ -102,7 +102,7 @@ function [L, dL] = mWLR_grad(W,X,y,iw, l2)
 % Function expects bias-augmented X and y in [1,...,K]
 
 % Shapes
-[N,D] = size(X);
+[~,D] = size(X);
 labels = unique(y);
 K = length(labels);
 W = reshape(W, [D,K]);
