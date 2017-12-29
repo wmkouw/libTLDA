@@ -1,4 +1,4 @@
-function [W,V,pred,PX,PZ] = suba(X,Z,y,varargin)
+function [W,pred,V,PX,PZ] = suba(X,Z,y,varargin)
 % Implementation of a Subspace Alignment classifier.
 %
 % Reference: Fernando, et al. (2014). Subspace alignment for domain adaption. ICCV.
@@ -12,8 +12,8 @@ function [W,V,pred,PX,PZ] = suba(X,Z,y,varargin)
 %           nE       subspace dimensionality (default: 'lr')
 %
 % Output:   W        trained linear classifier
-%           V        transformation matrix
 %           pred     predictions for given target data
+%           V        alignment transformation matrix
 %           PX       principal components of source data
 %           PZ       principal components of target data
 %
@@ -59,7 +59,7 @@ V = PX'*PZ;
 XP = X*PX*V;
 
 % Minimize loss
-W = mLR(XP,y, 'l2', p.Results.l2);
+W = mlr(XP,y, 'l2', p.Results.l2);
 
 % Map target data on target components
 ZP = Z*PZ;

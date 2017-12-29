@@ -15,7 +15,7 @@ if ~all(X(:,end)==1) && ~all(Z(:,end)==1)
 end
 
 % Fit logistic regressor
-W = mLR([X;Z], y, 'l2', l2);
+W = mlr([X;Z], y, 'l2', l2);
 
 % Calculate p(y=1|x)
 iw = exp(X*W(:,2))./sum(exp(X*W),2);

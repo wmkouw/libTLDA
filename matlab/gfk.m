@@ -1,135 +1,111 @@
-function [pred,G] = gfk(X,Z,yX,varargin)
+function [W,pred,G] = gfk(X,Z,y,varargin)
 % Implementation of Geodesic Flow Kernel classifier
 %
 % Reference: Geodesic Flow Kernel for Unsupervised Domain Adaptation. Gong, et al. (2008). CVPR.
 %
+% Input:    X        source data (N samples x D features)
+%           Z        target data (M samples x D features)
+%           y        source labels (N x 1) in  {1,...,K}
+% Optional:
+%           d        subspace dimensionality (default: 'lr')
+%           l2       l2-regularization parameters (default: 1e-3)
+%           clf      classifier (default: kknn)
+%
+% Output:   W        trained linear classifier (empty for kknn)
+%           pred     predictions for given target data
+%           G        geodesic flow kernel
+%
 % Copyright: Wouter M. Kouw
 % Last update: 19-12-2017
 
-% Check sizes
-[MX,NX] = size(X);
-[MZ,NZ]=  size(Z);
-K = max(yX);
-
 % Parse input
 p = inputParser;
-addParameter(p, 'd', max(1,min(floor(min(MZ,NZ)./2)-1,100)));
+addParameter(p, 'd', 1);
 addParameter(p, 'l2', 1e-3);
-addParameter(p, 'clf', '1-nn')
+addParameter(p, 'clf', 'knn')
 parse(p, varargin{:});
 
-% Prep data
-% X = da_prep(X, {'sum_samp'});
-% Z = da_prep(Z, {'sum_samp'});
+% Data shape
+[N, D] = size(X);
+[M, E] = size(Z);
+labels = unique(y);
+K = length(labels);
+
+% Check if dimensionalities are the same
+if D~=E; error('Data dimensionalities not the same in both domains'); end
+
+% Check if labels are in [1,...,K]
+if ~isempty(setdiff(labels,1:K)); error('Labels should be in [1,...,K]'); end
+
+% Check whether subspace is sufficiently small
+if p.Results.d > D/2; error('Subspace dimensionality not smaller than half of full dimensionality'); end
 
 % Find principal components
-[PX,~] = eigs(X*X',MX);
-[PZ,~] = eigs(Z*Z',p.Results.d);
+PX = pca(X, 'Algorithm', 'eig', 'NumComponents', D);
+PZ = pca(X, 'Algorithm', 'eig', 'NumComponents', p.Results.d);
+
+% Ortogonal complement to PX
+RX = null(PX');
 
 % Find geodesic flow kernel
-G = GFK([PX,null(PX')], PZ);
+G = compute_kernel([PX,RX], PZ);
 
 % Perform classification
 switch p.Results.clf
-    case {'1nn', '1-nn'}
-        [pred] = kknn(G, X', yX', Z');
     case {'lr', 'log'}
-        options.Display = 'final';
-        W = minFunc(@mLR_grad, zeros((MX+1)*K,1), options, G*X, yX, p.Results.l2);
-        W = [reshape(W(1:end-K), [MX K]); W(end-K+1:end)'];
-        [~,pred] = max(W'*[(G*Z); ones(1,NZ)],[],1);
+        % Multi-class logistic regression
+        W = mlr(X*G, y, 'l2', p.Results.l2);
+        
+        % Predict target labels
+        [~,pred] = max([Z, ones(M, 1)]*W, [], 2);
+        
+    case {'knn', 'kknn'}
+        % Kernel k-nearest-neighbours
+        [pred] = kknn(X,Z,y, G, 'l2', p.Results.l2);
+        W = [];
 end
 
 end
 
-function G = GFK(Q,Pt)
-% Input: Q = [Ps, null(Ps')], where Ps is the source subspace, column-wise orthonormal
-%        Pt: target subsapce, column-wise orthonormal, D-by-d, d < 0.5*D
-% Output: G = \int_{0}^1 \Phi(t)\Phi(t)' dt
+function G = compute_kernel(Q,PZ)
+% Input:    
+%   Q   =   [PX, null(PX')], where PX are the source principal components
+%   PZ  =   target principal components, D features by nE subspace dimensionality
+%           (nE should be less than 0.5*D)
+% Output: 
+%   G   =   solution to integrating the kernel mapping along the full path from source to target domain
+%           ( \int_{0}^1 \Phi(t)\Phi(t)' dt )
+%
+% Reference: Geodesic Flow Kernel for Unsupervised Domain Adaptation. Gong, et al. (2008). CVPR.
 
-% ref: Geodesic Flow Kernel for Unsupervised Domain Adaptation.
-% B. Gong, Y. Shi, F. Sha, and K. Grauman.
-% Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR), Providence, RI, June 2012.
+% Shapes
+D = size(Q, 2);
+d = size(PZ,2);
 
-% Contact: Boqing Gong (boqinggo@usc.edu)
+% Principal angles
+QPZ = Q' * PZ;
+[U,V,~,Gamma,~] = gsvd(QPZ(1:d,:), QPZ(d+1:end,:));
+theta = real(acos(diag(Gamma))); 
 
-N = size(Q,2); %
-dim = size(Pt,2);
+% Ensure non-zero angles for computational stability
+theta = max(theta, 1e-20);
 
-% compute the principal angles
-QPt = Q' * Pt;
-[V1,V2,V,Gam,Sig] = gsvd(QPt(1:dim,:), QPt(dim+1:end,:));
-V2 = -V2;
-theta = real(acos(diag(Gam))); % theta is real in theory. Imaginary part is due to the computation issue.
+% Filler zero matrices
+A1 = zeros(d,D-d);
+A2 = zeros(d,D-2*d);
+A3 = zeros(D,D-2*d);
 
-% compute the geodesic flow kernel
-eps = 1e-20;
-B1 = 0.5.*diag(1+sin(2*theta)./2./max(theta,eps));
-B2 = 0.5.*diag((-1+cos(2*theta))./2./max(theta,eps));
-B3 = B2;
-B4 = 0.5.*diag(1-sin(2*theta)./2./max(theta,eps));
-G = Q * [V1, zeros(dim,N-dim); zeros(N-dim,dim), V2] ...
-    * [B1,B2,zeros(dim,N-2*dim);B3,B4,zeros(dim,N-2*dim);zeros(N-2*dim,N)]...
-    * [V1, zeros(dim,N-dim); zeros(N-dim,dim), V2]' * Q';
+% Angle matrices
+L1 = 0.5.*diag(1 + sin(2*theta)./ (2.*theta));
+L2 = 0.5.*diag((-1 + cos(2*theta))./ (2.*theta));
+L3 = 0.5.*diag(1 - sin(2*theta)./ (2.*theta));
 
-end
+% Constituent matrices
+C1 = [U, A1; A1', -V]; 
+C2 = [L1, L2, A2; L2, L3, A2; A3'];
+C3 = [U, A1; A1', -V]';
 
-function [L, dL] = mLR_grad(W, X, y, lambda)
-% Implementation of logistic regression
-% Wouter Kouw
-% 29-09-2014
-% This function expects an 1xN label vector y with labels [1,..,K]
-
-% Shape
-[M,N] = size(X);
-K = max(y);
-W0 = reshape(W(M*K+1:end), [1 K]);
-W = reshape(W(1:M*K), [M K]);
-
-% Compute p(y|x)
-WX = bsxfun(@plus, W' * X, W0');
-WX = exp(bsxfun(@minus, WX, max(WX, [], 1)));
-WX = bsxfun(@rdivide, WX, max(sum(WX, 1), realmin));
-
-% Negative log-likelihood of each sample
-L = 0;
-for i=1:N
-    L = L - log(max(WX(y(i), i), realmin));
-end
-L = L + lambda .* sum([W(:); W0(:)] .^ 2);
-
-% Only compute gradient if requested
-if nargout > 1
-
-    % Compute positive part of gradient
-    pos_E = zeros(M, K);
-    pos_E0 = zeros(1, K);
-    for k=1:K
-        pos_E(:,k) = sum(X(:,y == k), 2);
-        pos_E0(k) = sum(y == k);
-    end
-
-    % Compute negative part of gradient
-    neg_E = X * WX';
-    neg_E0 = sum(WX, 2)';
-
-    % Compute gradient
-    dL = -[pos_E(:) - neg_E(:); pos_E0(:) - neg_E0(:)] + 2 .* lambda .* [W(:); W0(:)];
-
-end
-end
-
-function [pred] = kknn(M, Xr, Yr, Xt)
-
-% Calculate distance according to GFK metric
-dist = repmat(diag(Xr*M*Xr'),1,size(Xt,1)) ...
-    + repmat(diag(Xt*M*Xt')',length(Yr),1)...
-    - 2*Xr*M*Xt';
-
-% Sort distance
-[~, minIDX] = min(dist);
-
-% Assign label of nearest neighbour
-pred = Yr(minIDX);
+% Geodesic flow kernel
+G = Q * C1 * C2 * C3 * Q';
 
 end

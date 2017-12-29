@@ -1,4 +1,4 @@
-function [W] = mLS(X,y,varargin)
+function [W] = mls(X,y,varargin)
 % Multi-class least-squares
 %
 % Input:

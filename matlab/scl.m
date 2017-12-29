@@ -1,4 +1,4 @@
-function [W,C,preds] = scl(X,Z,y,varargin)
+function [W,pred,C] = scl(X,Z,y,varargin)
 % Implementation of a structural correspondence learning classifier
 % Assumes Bag-of-Words encoding with count features
 %
@@ -14,8 +14,8 @@ function [W,C,preds] = scl(X,Z,y,varargin)
 %           h       number of pivot components (default: 15)
 %
 % Output:   W       trained linear classifier
+%           pred    predictions by trained classifier on target data
 %           C       pivot predictor weight components
-%           preds   predictions by trained classifier on target data
 %
 % Copyright: Wouter M. Kouw
 % Last update: 19-12-2017
@@ -79,10 +79,10 @@ Xa = [X*C, X];
 Za = [Z*C, Z];
 
 % Minimize loss
-W = mLR(Xa, y, 'l2', p.Results.l2);
+W = mlr(Xa, y, 'l2', p.Results.l2);
 
 % Make predictions
-[~,preds] = max(Za*W, [], 2);
+[~,pred] = max(Za*W, [], 2);
 
 end
 

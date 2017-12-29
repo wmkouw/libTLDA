@@ -1,4 +1,4 @@
-function [W,iw,pred] = iw(X,Z,y,varargin)
+function [W,pred,iw] = iw(X,Z,y,varargin)
 % Implementation of an importance-weighted classifier
 %
 % References:
@@ -17,8 +17,8 @@ function [W,iw,pred] = iw(X,Z,y,varargin)
 %           loss    choice of loss function (default: 'log')
 %
 % Output:   W       trained linear classifier
-%           iw      estimated importance weights for source samples
 %           pred    predictions by trained classifier on target data
+%           iw      estimated importance weights for source samples
 %
 % Copyright: Wouter M. Kouw
 % Last update: 19-12-2017
@@ -64,7 +64,7 @@ switch lower(p.Results.iwe)
     case {'lr', 'log'}
         iw = iwe_lr(X,Z, p.Results.l2);
     case {'rg', 'gauss'}
-        iw = iwe_rG(X(:,1:end-1),Z(:,1:end-1), p.Results.l2);
+        iw = iwe_rg(X(:,1:end-1),Z(:,1:end-1), p.Results.l2);
     case {'kd', 'kde'}
         iw = iwe_kd(X(:,1:end-1),Z(:,1:end-1), p.Results.l2);
     case 'kmm'
@@ -88,7 +88,7 @@ switch p.Results.loss
 
     case {'lr','log'}
         % Minimize loss
-        W = minFunc(@mWLR_grad, zeros(D*K,1), options, X, y, iw, p.Results.l2);
+        W = minFunc(@mwlr_grad, zeros(D*K,1), options, X, y, iw, p.Results.l2);
         W = reshape(W, [D,K]);
 
     otherwise
@@ -100,7 +100,7 @@ end
 
 end
 
-function [L, dL] = mWLR_grad(W,X,y,iw, l2)
+function [L, dL] = mwlr_grad(W,X,y,iw, l2)
 % Multi-class importance-weighted logistic regression gradient
 % Function expects bias-augmented X and y in [1,...,K]
 

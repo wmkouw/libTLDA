@@ -11,12 +11,12 @@
 % Options for adaptive classifiers:
 % iw        importance-weighting
 % suba      subspace alignment
-% scl       structural correspondence learning 
 % gfk       geodesic flow kernel
 % tca       transfer component analysis
-% flda      feature-level domain-adaptation
 % rcsa      robust covariate shift adjustment
 % rba       robust bias-aware
+% scl       structural correspondence learning
+% flda      feature-level domain-adaptation
 %
 % Last update: 20-12-2017
 
@@ -26,7 +26,7 @@ addpath(genpath('util'));
 
 %% Select adaptive classifier to test
 
-aclfr = 'iw';
+aclfr = 'gfk';
 
 %% Generate domains
 
@@ -48,49 +48,49 @@ K = length(labels);
 
 switch lower(pd)
     case 'normal'
-
+        
         % Dimensionality
         D = 2;
-
+        
         % Source domain
         pi_S = [1./2, 1./2];
-        X = [bsxfun(@plus, randn(round(N*pi_S(1)),D), [-1 0]);
-            bsxfun(@plus, randn(round(N*pi_S(2)),D), [+1 0])];
+        X = [bsxfun(@plus, randn(round(N*pi_S(1)),D), -1*ones(1,D));
+             bsxfun(@plus, randn(round(N*pi_S(2)),D), +1*ones(1,D))];
         y = [1*ones(round(N*pi_S(1)),1);
-            2*ones(round(N*pi_S(2)),1)];
-
+             2*ones(round(N*pi_S(2)),1)];
+        
         % Target domain
         pi_T = [1./2, 1./2];
-        Z = [bsxfun(@plus, randn(round(M*pi_T(1)),D), [-0.5 1]);
-            bsxfun(@plus, randn(round(M*pi_T(2)),D), [+1.5 1])];
+        Z = [bsxfun(@plus, randn(round(M*pi_T(1)),D), -0.5*ones(1,D));
+             bsxfun(@plus, randn(round(M*pi_T(2)),D), +1.5*ones(1,D))];
         u = [1*ones(round(M*pi_T(1)),1);
-            2*ones(round(M*pi_T(2)),1)];
-
+             2*ones(round(M*pi_T(2)),1)];
+        
     case 'poisson'
-
+        
         % Dimensionality
         D = 500;
-
+        
         % Source domain
         pi_S = [1./2, 1./2];
         X = [poissrnd(.2*ones(round(N*pi_S(1)),D), [round(N*pi_S(1)), D]);
-             poissrnd(.5*ones(round(N*pi_S(2)),D), [round(N*pi_S(2)), D])];
+            poissrnd(.5*ones(round(N*pi_S(2)),D), [round(N*pi_S(2)), D])];
         y = [1*ones(round(N*pi_S(1)),1);
             2*ones(round(N*pi_S(2)),1)];
-
+        
         % Target domain
         pi_T = [1./2, 1./2];
         Z = [poissrnd(.3*ones(round(M*pi_T(1)),D), [round(M*pi_T(1)), D]);
-             poissrnd(.6*ones(round(M*pi_T(2)),D), [round(M*pi_T(2)), D])];
+            poissrnd(.6*ones(round(M*pi_T(2)),D), [round(M*pi_T(2)), D])];
         u = [1*ones(round(M*pi_T(1)),1);
             2*ones(round(M*pi_T(2)),1)];
-
+        
 end
 
 %% Train naive classifier
 
 % Multi-class logistic regressor
-Wn = mLR(X,y, 'l2', 1e-3);
+Wn = mlr(X,y, 'l2', 1e-3);
 
 % Predictions
 [~,pred_n] = max([Z,ones(M,1)]*Wn,[],2);
@@ -98,26 +98,25 @@ Wn = mLR(X,y, 'l2', 1e-3);
 % Error rate
 err_naive = mean(pred_n~=u);
 
-
 %% Train adaptive classifier
 
 switch aclfr
     case 'iw'
-        [W,iw,pred_a] = iw(X,Z,y, 'loss', 'qd', 'iwe', 'kd');
+        [~,pred_a] = iw(X,Z,y, 'iwe', 'kd');
     case 'suba'
-        [W,V,pred_a] = suba(X,Z,y, 'nE', 2);
+        [~,pred_a] = suba(X,Z,y, 'nE', floor(D/2));
     case 'gfk'
-        W = gfk(X,Z,y);
+        [~,pred_a] = gfk(X,Z,y, 'd', floor(D/2));
     case 'tca'
         W = tca(X,Z,y);
-    case 'flda'
-        W = flda(X,Z,y);
-    case 'scl'
-        [W,C,pred_a] = scl(X,Z,y, 'l2', 1e-6, 'm', 50, 'h', 25);
     case 'rcsa'
         W = rcsa(X,Z,y);
     case 'rba'
         W = rba(X,Z,y);
+    case 'scl'
+        [~,pred_a] = scl(X,Z,y, 'm', 50, 'h', 25);
+    case 'flda'
+        W = flda(X,Z,y);
     otherwise
         error('Classifier unknown');
 end

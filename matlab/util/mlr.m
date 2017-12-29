@@ -1,4 +1,4 @@
-function [W] = mLR(X,y,varargin)
+function [W] = mlr(X,y,varargin)
 % Multi-class logistic regression
 %
 % Input:
