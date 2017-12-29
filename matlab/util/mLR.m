@@ -10,26 +10,32 @@ function [W] = mLR(X,y,varargin)
 % Wouter Kouw
 % 15-09-2014
 
+% Parse input
+p = inputParser;
+addParameter(p, 'l2', 1e-3);
+addParameter(p, 'maxIter', 500);
+addParameter(p, 'xTol', 1e-5);
+parse(p, varargin{:});
+
 % Check for solver
 if isempty(which('minFunc')); error('Can not find minFunc'); end
 options.DerivativeCheck = 'off';
 options.Method = 'lbfgs';
-options.Display = 'final';
-
-% Parse input
-p = inputParser;
-addParameter(p, 'l2', 1e-3);
-parse(p, varargin{:});
+options.Display = 'none';
+options.maxIter = p.Results.maxIter;
+options.xTol = p.Results.xTol;
 
 % Shape
 [N,D] = size(X);
 
 % Check for bias augmentation
-if ~all(X(:,end)==1); X = [X ones(size(X,1),1)]; D = D+1; end
+if ~all(X(:,end)==1)
+    X = [X ones(size(X,1),1)]; D = D+1;
+end
 
 % Number of classes
 labels = unique(y);
-K = length(labels); 
+K = length(labels);
 
 % Check column vector y
 if size(y,1)~=N; y = y'; end
@@ -52,7 +58,7 @@ function [L, dL] = mLR_grad(W,X,y,l2)
 
 % Shape
 [~,D] = size(X);
-K = max(max(y),numel(unique(y))); 
+K = max(max(y),numel(unique(y)));
 W = reshape(W, [D K]);
 
 % Numerical stability
@@ -72,15 +78,15 @@ L = sum(ll,1) + l2.*sum(W(:).^2);
 
 % Only compute gradient if requested
 if nargout > 1
-  
+
     % Gradient with respect to B_k
     dll = zeros(D,K);
     for k = 1:K
         dll(:,k) = -X'*(y==k) + X'*(eXW(:,k)./eA);
     end
-    
+
 	% Add l2-regularizer
 	dL = dll(:) + 2*l2.*W(:);
-    
+
 end
 end

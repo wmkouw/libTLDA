@@ -13,6 +13,7 @@ Usage: <br>
 
 Contains:<br>
 - iw: Importance Weighting <br>
+	- Kernel density estimation <br>
 	- Ratio of Gaussians (Shimodaira, 2000) <br>
 	- Logistic discrimination (Bicket et al., 2009) <br>
 	- Kernel Mean Matching (Huang et al., 2006) <br>
@@ -20,9 +21,8 @@ Contains:<br>
 - scl: Structural Correspondence Learning (Blitzer et al., 2006) <br>
 - gfk: Geodesic Flow Kernel (Gong et al., 2012) <br>
 - tca: Transfer Component Analysis (Pan et al, 2009) <br>
-- sa: Subspace Alignment (Fernando et al., 2013) <br>
-- rba: Robust Bias-Aware (Mansour & Schain, 2014) <br>
-- &#955;-svma: &#955;-shift Support Vector Machine Adaptation (Liu & Ziebart, 2014) <br>
+- suba: Subspace Alignment (Fernando et al., 2013) <br>
+- rba: Robust Bias-Aware (Liu & Ziebart, 2014) <br>
 - flda: Feature-Level Domain Adaptation (Kouw et al., 2016) <br>
 
 ## Contact:

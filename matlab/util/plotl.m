@@ -1,5 +1,5 @@
 function [varargout] = plotl(w,cax,varargin)
-% Function to plot a linear classifier in a given figure
+% Plot a linear classifier in a given figure
 
 % Parse plot properties
 p = inputParser;

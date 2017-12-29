@@ -2,6 +2,7 @@ function [W,iw,pred] = iw(X,Z,y,varargin)
 % Implementation of an importance-weighted classifier
 %
 % References:
+% Kernel density estimators.
 % Ratio of Gaussians: Shimodaira (2000), Improving predictive inference under covariate shift by weighting the log-likelihood function. JSPI.
 % Logistic discrimination: Bickel et al. (2009), Discriminative learning under covariate shift. JMLR.
 % Kernel mean matching: Huang et al. (2007), Correcting sample selection bias by unlabeled data. NIPS.
@@ -60,14 +61,16 @@ end
 
 % Estimate importance weights
 switch lower(p.Results.iwe)
-    case {'rg', 'gauss'}
-        iw = iwe_rG(X,Z, p.Results.l2);
     case {'lr', 'log'}
         iw = iwe_lr(X,Z, p.Results.l2);
+    case {'rg', 'gauss'}
+        iw = iwe_rG(X(:,1:end-1),Z(:,1:end-1), p.Results.l2);
+    case {'kd', 'kde'}
+        iw = iwe_kd(X(:,1:end-1),Z(:,1:end-1), p.Results.l2);
     case 'kmm'
-        iw = iwe_kmm(X,Z, 1,'rbf');
+        iw = iwe_kmm(X(:,1:end-1),Z(:,1:end-1), 1,'rbf');
     case 'nn'
-        iw = iwe_nn(X,Z);
+        iw = iwe_nn(X(:,1:end-1),Z(:,1:end-1));
     otherwise
         print('Importance-weight estimator unknown')
 end
