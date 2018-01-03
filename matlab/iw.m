@@ -25,7 +25,6 @@ function [W,pred,iw] = iw(X,Z,y,varargin)
 
 % Add dependencies to path
 addpath(genpath('util'));
-addpath(genpath('minFunc'));
 
 % Check for solver
 if isempty(which('minFunc')); error('Can not find minFunc'); end

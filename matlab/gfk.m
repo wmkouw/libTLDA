@@ -18,6 +18,9 @@ function [W,pred,G] = gfk(X,Z,y,varargin)
 % Copyright: Wouter M. Kouw
 % Last update: 19-12-2017
 
+% Add dependencies to path
+addpath(genpath('util'));
+
 % Parse input
 p = inputParser;
 addParameter(p, 'd', 1);

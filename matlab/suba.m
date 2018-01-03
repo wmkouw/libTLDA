@@ -20,8 +20,8 @@ function [W,pred,V,PX,PZ] = suba(X,Z,y,varargin)
 % Copyright: Wouter M. Kouw
 % Last update: 19-12-2017
 
-% Dependencies
-addpath(genpath('minFunc'));
+% Add dependencies to path
+addpath(genpath('util'));
 
 % Parse input
 p = inputParser;

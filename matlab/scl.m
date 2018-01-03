@@ -22,7 +22,6 @@ function [W,pred,C] = scl(X,Z,y,varargin)
 
 % Add dependencies to path
 addpath(genpath('util'));
-addpath(genpath('minFunc'));
 
 % Check for solver
 if isempty(which('minFunc')); error('Can not find minFunc'); end
@@ -64,7 +63,7 @@ ix = ix(1:p.Results.m);
 pivot = [X(:,ix); Z(:,ix)];
 pivot = double(pivot>0);
 
-% Solve m binary prediction tasks
+% Solve m binary prediction tasks with a Huber loss function
 P = zeros(D,p.Results.m);
 for l = 1:p.Results.m
     disp(['Pivot feature #' num2str(l)]);

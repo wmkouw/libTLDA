@@ -26,7 +26,7 @@ addpath(genpath('util'));
 
 %% Select adaptive classifier to test
 
-aclfr = 'gfk';
+aclfr = 'tca';
 
 %% Generate domains
 
@@ -39,8 +39,8 @@ switch aclfr
 end
 
 % Number of samples
-N = 500;
-M = 1000;
+N = 100;
+M = 100;
 
 % Classes
 labels = [1,2];
@@ -48,43 +48,43 @@ K = length(labels);
 
 switch lower(pd)
     case 'normal'
-        
+
         % Dimensionality
         D = 2;
-        
+
         % Source domain
         pi_S = [1./2, 1./2];
         X = [bsxfun(@plus, randn(round(N*pi_S(1)),D), -1*ones(1,D));
              bsxfun(@plus, randn(round(N*pi_S(2)),D), +1*ones(1,D))];
         y = [1*ones(round(N*pi_S(1)),1);
              2*ones(round(N*pi_S(2)),1)];
-        
+
         % Target domain
         pi_T = [1./2, 1./2];
         Z = [bsxfun(@plus, randn(round(M*pi_T(1)),D), -0.5*ones(1,D));
              bsxfun(@plus, randn(round(M*pi_T(2)),D), +1.5*ones(1,D))];
         u = [1*ones(round(M*pi_T(1)),1);
              2*ones(round(M*pi_T(2)),1)];
-        
+
     case 'poisson'
-        
+
         % Dimensionality
         D = 500;
-        
+
         % Source domain
         pi_S = [1./2, 1./2];
         X = [poissrnd(.2*ones(round(N*pi_S(1)),D), [round(N*pi_S(1)), D]);
             poissrnd(.5*ones(round(N*pi_S(2)),D), [round(N*pi_S(2)), D])];
         y = [1*ones(round(N*pi_S(1)),1);
             2*ones(round(N*pi_S(2)),1)];
-        
+
         % Target domain
         pi_T = [1./2, 1./2];
         Z = [poissrnd(.3*ones(round(M*pi_T(1)),D), [round(M*pi_T(1)), D]);
             poissrnd(.6*ones(round(M*pi_T(2)),D), [round(M*pi_T(2)), D])];
         u = [1*ones(round(M*pi_T(1)),1);
             2*ones(round(M*pi_T(2)),1)];
-        
+
 end
 
 %% Train naive classifier
@@ -102,19 +102,19 @@ err_naive = mean(pred_n~=u);
 
 switch aclfr
     case 'iw'
-        [~,pred_a] = iw(X,Z,y, 'iwe', 'kd');
+        [~,pred] = iw(X,Z,y, 'iwe', 'kd');
     case 'suba'
-        [~,pred_a] = suba(X,Z,y, 'nE', floor(D/2));
+        [~,pred] = suba(X,Z,y, 'nE', floor(D/2));
     case 'gfk'
-        [~,pred_a] = gfk(X,Z,y, 'd', floor(D/2));
+        [~,pred] = gfk(X,Z,y, 'd', floor(D/2));
     case 'tca'
-        W = tca(X,Z,y);
+        [~,pred,C,K] = tca(X,Z,y, 'm', 2);
     case 'rcsa'
         W = rcsa(X,Z,y);
     case 'rba'
         W = rba(X,Z,y);
     case 'scl'
-        [~,pred_a] = scl(X,Z,y, 'm', 50, 'h', 25);
+        [~,pred] = scl(X,Z,y, 'm', 50, 'h', 25);
     case 'flda'
         W = flda(X,Z,y);
     otherwise
@@ -122,7 +122,7 @@ switch aclfr
 end
 
 % Error rate
-err_adapt = mean(pred_a~=u);
+err_adapt = mean(pred~=u);
 
 %% Report results
 disp(['Error naive: ' num2str(err_naive)]);
