@@ -1,7 +1,8 @@
 # LibTLDA: transfer learning and domain-adaptive classifiers
 Warning: development is ongoing. All usage is at your own risk.
 
-## Matlab:
+## Matlab 
+Version: 9.2.0.556344 (R2017a)
 Dependencies: <br>
 - MinFunc (https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html)
 
