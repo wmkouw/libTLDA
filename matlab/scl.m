@@ -9,7 +9,7 @@ function [W,pred,C] = scl(X,Z,y,varargin)
 %           Z       target data (M samples x D features)
 %           y       source labels (N x 1) in {1,...,K}
 % Optional:
-%           l2      additional l2-regularization parameters (default: 1e-3)
+%           l2      l2-regularization parameters (default: 1e-3)
 %           m       number of pivot features (default: 20)
 %           h       number of pivot components (default: 15)
 %

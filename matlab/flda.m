@@ -7,34 +7,31 @@ function [W,theta] = flda(X,Z,y,varargin)
 %           Z      target data (M samples x D features)
 %           y      source labels (N x 1) in {1,...,K}
 % Optional:
-%           u      target labels (M x 1) in {1,...,K}
-%           l2      Additional l2-regularization parameters (default: 1e-3)
+%           l2      l2-regularization parameters (default: 1e-3)
 %           td      Transfer distribution (default: 'blankout')
 %           loss    Choice of loss function (default: 'log')
 %
 % Output:   W       Trained linear classifier
-%           theta   parameters of the blankout transfer distribution
+%           theta   transfer distribution parameters
 %
 % Copyright: Wouter M. Kouw
 % Last update: 19-12-2017
 
-% Parse optionals
-p = inputParser;
-addOptional(p, 'u', []);
-addOptional(p, 'l2', 1e-3);
-addOptional(p, 'td', 'blankout');
-addOptional(p, 'loss', 'log');
-parse(p, varargin{:});
-
 % Add dependencies to path
 addpath(genpath('util'));
-addpath(genpath('minFunc'));
 
 % Check for solver
 if isempty(which('minFunc')); error('Can not find minFunc'); end
 options.DerivativeCheck = 'off';
 options.Method = 'lbfgs';
 options.Display = 'final';
+
+% Parse optionals
+p = inputParser;
+addOptional(p, 'l2', 1e-3);
+addOptional(p, 'td', 'blankout');
+addOptional(p, 'loss', 'log');
+parse(p, varargin{:});
 
 % Shape
 [M,NQ] = size(X);

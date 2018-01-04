@@ -3,17 +3,22 @@ function [W,pred,iw] = iw(X,Z,y,varargin)
 %
 % References:
 % Kernel density estimators.
-% Ratio of Gaussians: Shimodaira (2000), Improving predictive inference under covariate shift by weighting the log-likelihood function. JSPI.
-% Logistic discrimination: Bickel et al. (2009), Discriminative learning under covariate shift. JMLR.
-% Kernel mean matching: Huang et al. (2007), Correcting sample selection bias by unlabeled data. NIPS.
-% Nearest-neighbour-based: Loog (2015), Nearest neighbor-based importance weighting. MLSP.
+% Ratio of Gaussians: Shimodaira (2000), Improving predictive inference 
+%                     under covariate shift by weighting the log-likelihood 
+%                     function. JSPI.
+% Logistic discrimination: Bickel et al. (2009), Discriminative learning 
+%                          under covariate shift. JMLR.
+% Kernel mean matching: Huang et al. (2007), Correcting sample selection 
+%                       bias by unlabeled data. NIPS.
+% Nearest-neighbour-based: Loog (2015), Nearest neighbor-based importance 
+%                          weighting. MLSP.
 %
 % Input:    X       source data (N samples x D features)
 %           Z       target data (M samples x D features)
 %           y       source labels (N x 1) in {1,...,K}
 % Optional:
-%           l2      additional l2-regularization parameters (default: 1e-3)
-%           iwe     choice of importance weight estimation method (default: 'lr')
+%           l2      l2-regularization parameter (default: 1e-3)
+%           iwe     importance weight estimator (default: 'lr')
 %           loss    choice of loss function (default: 'log')
 %
 % Output:   W       trained linear classifier

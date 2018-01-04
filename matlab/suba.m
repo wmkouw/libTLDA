@@ -1,15 +1,16 @@
 function [W,pred,V,PX,PZ] = suba(X,Z,y,varargin)
 % Implementation of a Subspace Alignment classifier.
 %
-% Reference: Fernando, et al. (2014). Subspace alignment for domain adaption. ICCV.
+% Reference: Fernando, et al. (2014). Subspace alignment for domain 
+%            adaption. ICCV.
 %
 % Input:    X        source data (N samples x D features)
 %           Z        target data (M samples x D features)
 %           y        source labels (N x 1) in  {1,...,K}
 % Optional:
 %           l2       l2-regularization parameters (default: 1e-3)
+%           d        subspace dimensionality (default: 1)
 %           zscored  already z-scored or not (default: false)
-%           nE       subspace dimensionality (default: 'lr')
 %
 % Output:   W        trained linear classifier
 %           pred     predictions for given target data
@@ -26,8 +27,8 @@ addpath(genpath('util'));
 % Parse input
 p = inputParser;
 addParameter(p, 'l2', 1e-3);
+addParameter(p, 'd', 1);
 addParameter(p, 'zscored', false);
-addParameter(p, 'nE', 1);
 parse(p, varargin{:});
 
 % Data shape
@@ -49,8 +50,8 @@ if ~p.Results.zscored
 end
 
 % Principal components of each domain
-PX = pca(X, 'Algorithm', 'eig', 'NumComponents', p.Results.nE);
-PZ = pca(Z, 'Algorithm', 'eig', 'NumComponents', p.Results.nE);
+PX = pca(X, 'Algorithm', 'eig', 'NumComponents', p.Results.d);
+PZ = pca(Z, 'Algorithm', 'eig', 'NumComponents', p.Results.d);
 
 % Aligned source components
 V = PX'*PZ;

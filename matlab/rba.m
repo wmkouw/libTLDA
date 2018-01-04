@@ -1,107 +1,167 @@
-function [theta,varargout] = rba(X,y,Z,varargin)
+function [W,pred,iw] = rba(X,Z,y,varargin)
 % Implementation of a Robust Bias-Aware classifier
 %
-% Reference: Liu & Ziebart (20140. Robust Classification under Sample Selection Bias. NIPS.
+% Reference: Liu & Ziebart (20140. Robust Classification under
+%            Sample Selection Bias. NIPS.
+%
+% Input:    X        source data (N samples x D features)
+%           Z        target data (M samples x D features)
+%           y        source labels (N x 1) in  {1,...,K}
+% Optional:
+%           order    order of feature statistics (default: 'first')
+%           l2       l2-regularization parameters (default: 1e-3)
+%           gamma    decaying learning rate (default: 1)
+%           tau      convergence threshold (default: 1e-5)
+%           maxIter  maximum number of iterations (default: 500)
+%           clip     clipping value for importance weights (default: 1000)
+%
+% Output:   W        Classifier parameters
+%           pred     target label predictions
+%           iw       importance weights
 %
 % Copyright: Wouter M. Kouw
-% Last update: 19-12-2017
+% Last update: 04-01-2018
+
+% Add dependencies to path
+addpath(genpath('util'));
 
 % Parse hyperparameters
 p = inputParser;
-addOptional(p, 'lambda', 1e-3);
-addOptional(p, 'gamma', 1);
 addOptional(p, 'order', 'first');
-addOptional(p, 'maxIter', 500);
-addOptional(p, 'xTol', 1e-5);
-addOptional(p, 'yZ', []);
-addOptional(p, 'clip', 100);
+addOptional(p, 'l2', 1e-5);
+addOptional(p, 'gamma', 1);
+addOptional(p, 'tau', 1e-5);
+addOptional(p, 'maxIter', 1000);
+addOptional(p, 'clip', 1000);
 parse(p, varargin{:});
 
-% Shapes
-[N,D] = size(X);
-[M,~] = size(Z);
+% Data shape
+[N, D] = size(X);
+[M, E] = size(Z);
 labels = unique(y);
-K = numel(labels);
-if K>2; error('2-class only'); end
+K = length(labels);
+
+% Check if dimensionalities are the same
+if D~=E; error('Data dimensionalities not the same in both domains'); end
 
 % Feature function
 switch p.Results.order
     case 'first'
-
-        % Sufficient statistics
-        fxy = zeros(N,D+1,K);
-        fzy = zeros(M,D+1,K);
-        for k = 1:K
-            fxy(y==labels(k),:,k) = [X(y==labels(k),:) ones(sum(y==labels(k)),1)];
-            fzy(:,:,k) = [Z ones(M,1)];
-        end
-
+        % First-order moment statistics plus the intercept
+        fs = @(x,y) [y y.*x ones(size(x,1),1)];
+        
+        % Set dimensionality to feature statistics dimensionality
+        D = 1 + D + 1;
+        
     case 'second'
-    case 'third'
+        % First-order moments, second-order mixed moments and the intercept
+        fs = @(x,y) [y y.*x y.*kron2(x,x) ones(size(x,1),1)];
+        
+        % Set dimensionality to feature statistics dimensionality
+        D = 1 + D + D.^2 + 1;
+        
     otherwise
-        error('Higher-order moments than third not implemented');
+        error('Higher-order moments not implemented yet');
 end
 
 % Compute moment-matching constraint
-c = squeeze(mean(fxy,1))';
+c = mean(fs(X,y),1);
 
-% Calculate importance weights
-iw = min(p.Results.clip, 1./iw_gauss(X',Z', 'order', 'ZX', 'clip', p.Results.clip))';
+% Estimate importance weights
+iw = iwe_kd(X,Z);
 
-% Initialize
-theta = rand(K,D+1);
-for n = 1:p.Results.maxIter
+% Inverse weights to achieve p_S(x)/p_T(x)
+iw = 1./iw;
 
-    % Calculate posteriors
-    psi = zeros(N,K);
+% Clip weights if necessary
+iw = min(p.Results.clip, iw);
+
+% Preallocate arrays
+psi = zeros(N,K);
+pyx = zeros(N,K);
+
+% Initialize classifier weights
+W = randn(1,D)*0.01;
+
+% Start gradient descent
+for t = 1:p.Results.maxIter
+    
+    %%% Calculate psi function 
     for k = 1:K
-        for i = 1:N
-            psi(i,k) = iw(i).* theta(k,:) * fxy(i,:,k)';
-        end
+        psi(:,k) = iw.*(fs(X,k*ones(N,1))*W');
     end
-
-    py = zeros(N,K);
-    dL = zeros(K,D+1);
+    
+    %%% Estimate posterior p^(Y=y | x_i) (added numerical stability trick)
     for k = 1:K
-        a = max(psi,[],2);
-        py(:,k) = exp(psi(:,k)-a)./ sum(exp(bsxfun(@minus,psi,a)),2);
-        for i = 1:N
-            dL(k,:) = dL(k,:) + sum(py(i,k)'*fxy(i,:,:),3);
-        end
+        max_const = max(psi,[],2);
+        pyx(:,k) = exp(psi(:,k) - max_const)./ sum(exp(psi - max_const), 2);
     end
-    dL = dL./N;
-
-    % Compute gradient with moment-matching gradients and regularization
-    dC = c - dL - p.Results.lambda.*2.*theta;
-    if any(isnan(dC)); error('Numerical explosion'); end
-
-    % Update theta
-    theta = theta + dC./(n*p.Results.gamma);
-
-    % Break or update
-    if norm(dC) <= p.Results.xTol; disp(['Broke at ' num2str(n)]); break; end
-    if 1; disp(['Iteration ' num2str(n) '/' num2str(p.Results.maxIter) ' - Gradient: ' num2str(norm(dC))]); end
-
-end
-
-% Output importance weights
-varargout{1} = iw;
-
-% Evaluate with target labels
-if ~isempty(p.Results.yZ);
-
-    % Error on target set
-    post = zeros(M,K);
-    for i = 1:M
-        for k = 1:K
-            post(i,k) = exp(theta(k,:)*fzy(i,:,k)')./sum(exp(sum(theta.*squeeze(fzy(i,:,:))',2)),1);
-        end
+        
+    % Compute product of estimated posterior and source feature statistics
+    pfs = 0;
+    for k = 1:K
+        pfs = pfs + pyx(:,k).* fs(X,k*ones(N,1));
     end
-    [~,pred] = max(post, [], 2);
-    varargout{2} = mean(pred~=p.Results.yZ);
-    varargout{3} = pred;
+
+    % Gradient computation
+    dL = c - mean(pfs,1);
+    
+    % Add regularization
+    dL = dL + p.Results.l2.*2.*W;
+    
+    % Apply learning rate to gradient
+    dW = dL./(t*p.Results.gamma);
+    
+    % Update classifier weights
+    W = W + dW;
+    
+    % Report progress
+    if rem(t,10)==1
+        fprintf('Iteration %4i/%4i - Norm gradient: %3.5f\n', t, p.Results.maxIter, norm(dL));
+    end
+    
+    % Check for convergence
+    if norm(dL) <= p.Results.tau
+        disp(['Broke at ' num2str(t)]);
+        break
+    end
+    
+end
+
+% Calculate psi function for target samples
+psi = zeros(M,K);
+for k = 1:K
+    psi(:,k) = fs(Z,k*ones(M,1))*W';
+end
+
+% Compute posteriors for target samples
+post = zeros(M,K);
+for k = 1:K
+    max_const = max(psi, [], 2); 
+    post(:,k) = exp(psi(:,k) - max_const) ./ sum(exp(psi - max_const),2);
+end
+
+% Predictions through max-posteriors
+[~,pred] = max(post, [], 2);
 
 end
 
 
+function [f] = kron2(A,B)
+% Row-wise Kronecker delta product to expand data matrix to second-order
+% moments
+
+% Must be expansion of data matrix
+if A~=B; error('A not equal to B'); end
+
+% Preallocate
+f = zeros(size(A,1),size(B,2)*2);
+
+% Loop over rows
+for i = 1:size(A,1)
+    % Row-wise Kronecker delta product
+    f(i,:) = kron(A(i,:),B(i,:));
 end
+
+end
+

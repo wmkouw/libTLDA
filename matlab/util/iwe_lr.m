@@ -1,7 +1,12 @@
-function [iw] = iwe_lr(X, Z, l2)
+function [iw] = iwe_lr(X, Z, varargin)
 % Logistic discrimination for importance weight estimation.
 %
 % Reference: Bickel et al. (2009), Discriminative learning under covariate shift. JMLR.
+
+% Parse optionals
+p = inputParser;
+addOptional(p, 'l2', 0);
+parse(p, varargin{:});
 
 % Shape
 [N,~] = size(X);
@@ -15,7 +20,7 @@ if ~all(X(:,end)==1) && ~all(Z(:,end)==1)
 end
 
 % Fit logistic regressor
-W = mlr([X;Z], y, 'l2', l2);
+W = mlr([X;Z], y, 'l2', p.Results.l2);
 
 % Calculate p(y=1|x)
 iw = exp(X*W(:,2))./sum(exp(X*W),2);

@@ -1,7 +1,8 @@
 function [W,pred,G] = gfk(X,Z,y,varargin)
 % Implementation of Geodesic Flow Kernel classifier
 %
-% Reference: Geodesic Flow Kernel for Unsupervised Domain Adaptation. Gong, et al. (2008). CVPR.
+% Reference: Geodesic Flow Kernel for Unsupervised Domain Adaptation. 
+%            Gong, et al. (2008). CVPR.
 %
 % Input:    X        source data (N samples x D features)
 %           Z        target data (M samples x D features)

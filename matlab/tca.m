@@ -1,14 +1,15 @@
 function [W,pred,C,K] = tca(X,Z,y,varargin)
 % Implementation of a Transfer Component Analysis classifier
 %
-% Reference: Pan, Tsang, Kwok, Yang (2009). Domain Adaptation via Transfer Component Analysis.
+% Reference: Pan, Tsang, Kwok, Yang (2009). Domain Adaptation via Transfer
+% Component Analysis. IJCAI
 %
 % Input:    X        source data (N samples x D features)
 %           Z        target data (M samples x D features)
 %           y        source labels (N x 1) in  {1,...,K}
 % Optional:
-%           l2      l2-regularization parameters (default: 1e-3)
-%           m       Number of components to reduce to (default: 1)
+%           l2      l2-regularization parameters (default: 1e-5)
+%           nC      Number of components to reduce to (default: 1)
 %           mu      trade-off parameter transfer components (default: 1)
 %           bw      radial basis function kernel bandwidth (default: 1)
 %
@@ -26,7 +27,7 @@ addpath(genpath('util'));
 % Parse input
 p = inputParser;
 addOptional(p, 'l2', 1e-5);
-addOptional(p, 'm', 1);
+addOptional(p, 'nC', 1);
 addOptional(p, 'mu', .1);
 addOptional(p, 'bw', 1);
 parse(p, varargin{:});
@@ -47,26 +48,40 @@ if ~isempty(setdiff(labels,1:K)); error('Labels should be in [1,...,K]'); end
 if p.Results.m > N+M-1; error('Too many components specified'); end
 
 % Find transfer components
-[C,K] = tc(X, Z, 'bw', p.Results.bw, 'mu', p.Results.mu, 'm', p.Results.m);
+[C,K] = tc(X, Z, 'bw', p.Results.bw, 'mu', p.Results.mu, 'm', p.Results.nC);
+
+% Map kernelized source data on transfer components
+X = K(1:N,:)*C;
+
+% Map kernelized target data on transfer components
+Z = K(N+1:end,:)*C;
 
 % Train classifier
-W = mlr(K(1:N,:)*C, y, 'l2', p.Results.l2);
+W = mlr(X, y, 'l2', p.Results.l2);
 
 % Do classification on target set
-[~,pred] = max([K(N+1:end,:)*C ones(M,1)]*W, [], 2);
+[~,pred] = max([Z ones(M,1)]*W, [], 2);
 
 end
 
 
-function [M,K] = tc(X,Z,varargin)
+function [C,K] = tc(X,Z,varargin)
 % Find transfer components based on distances between datasets
+%
+% Input:    X        source data (N samples x D features)
+%           Z        target data (M samples x D features)
+% Optional:
+%           l2      l2-regularization parameters (default: 1e-5)
+%           nC      Number of components to reduce to (default: 1)
+%           mu      trade-off parameter transfer components (default: 1)
+%           bw      radial basis function kernel bandwidth (default: 1)
 
 % Parse input
 p = inputParser;
 addOptional(p, 'l2', 1e-5);
 addOptional(p, 'bw', 1);
 addOptional(p, 'mu', 1);
-addOptional(p, 'm', 1);
+addOptional(p, 'nC', 1);
 parse(p, varargin{:});
 
 % Shapes
@@ -94,9 +109,9 @@ H = eye(N + M) - ones(N + M)./(N + M);
 J = (eye(N + M) + p.Results.mu*K*L*K)\(K*H*K);
 
 % Eigenvector decomposition as solution to trace minimization
-[M,~] = eigs(J, p.Results.m);
+[C,~] = eigs(J, p.Results.m);
 
 % Discard imaginary numbers (possible computation issue)
-M = real(M);
+C = real(C);
 
 end
