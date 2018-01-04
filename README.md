@@ -2,7 +2,7 @@
 Warning: development is ongoing. All usage is at your own risk.
 
 ## Matlab 
-Version: 9.2.0.556344 (R2017a)
+Version: 9.2.0.556344 (R2017a) <br>
 Dependencies: <br>
 - MinFunc (https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html)
 
