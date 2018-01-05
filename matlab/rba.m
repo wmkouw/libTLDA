@@ -15,8 +15,8 @@ function [W,pred,iw] = rba(X,Z,y,varargin)
 %           maxIter  maximum number of iterations (default: 500)
 %           clip     clipping value for importance weights (default: 1000)
 %
-% Output:   W        Classifier parameters
-%           pred     target label predictions
+% Output:   W        trained classifier parameters
+%           pred     predictions by trained classifier on target data
 %           iw       importance weights
 %
 % Copyright: Wouter M. Kouw

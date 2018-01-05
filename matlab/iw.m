@@ -21,7 +21,7 @@ function [W,pred,iw] = iw(X,Z,y,varargin)
 %           iwe     importance weight estimator (default: 'lr')
 %           loss    choice of loss function (default: 'log')
 %
-% Output:   W       trained linear classifier
+% Output:   W       trained classifier parameters
 %           pred    predictions by trained classifier on target data
 %           iw      estimated importance weights for source samples
 %

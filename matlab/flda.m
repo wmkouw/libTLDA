@@ -1,7 +1,8 @@
-function [W,theta] = flda(X,Z,y,varargin)
+function [W,pred,theta] = flda(X,Z,y,varargin)
 % Implementation of a feature-level domain adaptive classifier.
 %
-% Reference: Feature-level domain adaptation. Kouw et al. (2016). JMLR.
+% Reference: Kouw, Krijthe, Loog & Van der Maaten (2016). Feature-level
+%            domain adaptation. JMLR.
 %
 % Input:    X      source data (N samples x D features)
 %           Z      target data (M samples x D features)
@@ -10,12 +11,13 @@ function [W,theta] = flda(X,Z,y,varargin)
 %           l2      l2-regularization parameters (default: 1e-3)
 %           td      Transfer distribution (default: 'blankout')
 %           loss    Choice of loss function (default: 'log')
-%
-% Output:   W       Trained linear classifier
+%[
+% Output:   W       trained classifier parameters
+%           pred    predictions by trained classifier on target data
 %           theta   transfer distribution parameters
 %
 % Copyright: Wouter M. Kouw
-% Last update: 19-12-2017
+% Last update: 04-01-2018
 
 % Add dependencies to path
 addpath(genpath('util'));
@@ -33,300 +35,178 @@ addOptional(p, 'td', 'blankout');
 addOptional(p, 'loss', 'log');
 parse(p, varargin{:});
 
-% Shape
-[M,NQ] = size(X);
-if size(yQ,1)~=NQ; yQ = yQ'; end
+% Data shape
+[N,D] = size(X);
+[M,E] = size(Z);
+labels = unique(y);
+K = length(labels);
 
-% Number of classes
-K = numel(unique(yQ));
+% Check if dimensionalities are the same
+if D~=E; error('Data dimensionalities not the same in both domains'); end
 
-switch [p.Results.loss '-' p.Results.td]
-    case 'qd-dropout'
-        if K==2
+% Check if labels are in [1,...,K]
+if ~isempty(setdiff(labels,1:K)); error('Labels should be in [1,...,K]'); end
 
-            % Check for y in {-1,+1}
-            if ~isempty(setdiff(unique(yQ), [-1,1])); yQ(yQ~=1) = -1; end
+% Map to one-hot encoding
+Y = -ones(N,K);
+for n = 1:N
+    Y(n,y(n)) = 1;
+end
 
-            % Estimate dropout transfer parameters
-            theta = mle_td(X,Z, 'dropout');
+% Check for bias augmentation
+if ~all(X(:,end)==1) && ~all(Z(:,end)==1)
+    X = [X ones(N,1)];
+    Z = [Z ones(M,1)];
+    D = D + 1;
+end
 
-            % First two moments of transfer distribution
-            EX = bsxfun(@times, (1-theta), X);
-            VX = diag(theta.*(1-theta)).*(X*X');
+% Estimate parameters of transfer distribution
+theta = mle_td(X,Z, p.Results.td);
 
-            % Least squares solution
-            W = (EX*EX' + VX + p.Results.l2*eye(size(X,1)))\EX*yQ;
-            W = [W -W];
-        else
+switch p.Results.td
+    case 'dropout'
+        % First moment of transfer distribution
+        E = bsxfun(@times, (1-theta), X);
 
-            W = zeros(M,K);
-            theta = cell(1,K);
-            for k = 1:K
-
-                % Labels
-                yk = (yQ==k);
-
-                % 50up-50down resampling
-                ix = randsample(find(yk==0), floor(.5*sum(1-yk)));
-                Xk = [X(:,ix) repmat(X(:,yk), [1 floor((K-1)/2)])];
-                yk = [double(yk(ix))-1; ones(floor((K-1)./2)*sum(yk),1)];
-
-                % Estimate dropout transfer parameters
-                theta{k} = mle_td(Xk,Z, 'dropout');
-
-                % First two moments of transfer distribution
-                EX = bsxfun(@times, (1-theta{k}), Xk);
-                VX = diag(theta{k}.*(1-theta{k})).*(Xk*Xk');
-
-                % Least squares solution
-                W(:,k) = (EX*EX' + VX + p.Results.l2*eye(size(Xk,1)))\EX*yk;
-
-            end
-
+        % Second moment of transfer distribution
+        V = zeros(D,D,N);
+        for i = 1:N
+            V(:,:,i) = diag(theta.*(1-theta)).*(X(i,:)'*X(i,:));
         end
+    case 'blankout'
+        % First moment of transfer distribution
+        E = X;
 
-    case 'qd-blankout'
-        if K==2
-
-            % Check for y in {-1,+1}
-            if ~isempty(setdiff(unique(yQ), [-1,1])); yQ(yQ~=1) = -1; end
-
-            % Estimate blankout transfer parameters
-            theta = mle_td(X,Z, 'blankout');
-
-            % Second moment of transfer distribution
-            VX = diag(theta./(1-theta)).*(X*X');
-
-            % Least squares solution
-            W = (X*X' + VX + p.Results.l2*eye(size(X,1)))\X*yQ;
-            W = [W -W];
-        else
-
-            W = zeros(M,K);
-            theta = cell(1,K);
-            for k = 1:K
-
-                % Labels
-                yk = (yQ==k);
-
-                % 50up-50down resampling
-                ix = randsample(find(yk==0), floor(.5*sum(1-yk)));
-                Xk = [X(:,ix) repmat(X(:,yk), [1 floor((K-1)/2)])];
-                yk = [double(yk(ix))-1; ones(floor((K-1)./2)*sum(yk),1)];
-
-                % Estimate blankout transfer parameters
-                theta{k} = mle_td(Xk,Z, 'blankout');
-
-                % Second moment of transfer distribution
-                VX = diag(theta{k}./(1-theta{k})).*(Xk*Xk');
-
-                % Least squares solution
-                W(:,k) = (Xk*Xk' + VX + p.Results.l2*eye(size(Xk,1)))\Xk*yk;
-
-            end
-
-        end
-
-    case 'log-dropout'
-        if K==2
-
-            % Estimate dropout transfer parameters
-            theta = mle_td(X,Z, 'dropout');
-
-            % Analytical solution to theta=1 => w=0
-            ix = find(theta~=1);
-
-            % Check for y in {-1,+1}
-            if ~isempty(setdiff(unique(yQ), [-1,1])); yQ(yQ~=1) = -1; end
-
-            % Minimize loss
-            if ~isrow(yQ); yQ = yQ'; end
-            w = minFunc(@flda_log_dropout_grad, zeros(length(ix),1), options, X(ix,:),yQ,theta(ix),p.Results.l2);
-
-            % Bookkeeping
-            W = zeros(M,1);
-            W(ix) = w;
-            W = [W -W];
-
-        else
-
-            W = zeros(M,K);
-            theta = cell(1,K);
-            for k = 1:K
-
-                % Labels
-                yk = (yQ==k);
-
-                % 50up-50down resampling
-                ix = randsample(find(yk==0), floor(.5*sum(1-yk)));
-                Xk = [X(:,ix) repmat(X(:,yk), [1 floor((K-1)/2)])];
-                yk = [double(yk(ix))-1; ones(floor((K-1)./2)*sum(yk),1)];
-
-                % Estimate dropout transfer parameters
-                theta{k} = mle_td(Xk,Z, 'dropout');
-
-                % Analytical solution to theta=1 => w=0
-                ix = find(theta{k}~=1);
-
-                % Minimize loss
-                if ~isrow(yk); yk = yk'; end
-                w = minFunc(@flda_log_dropout_grad, zeros(length(ix),1), options, Xk(ix,:),yk,theta{k}(ix),p.Results.l2);
-
-                % Bookkeeping
-                W(ix,k) = w;
-            end
-        end
-    case 'log-blankout'
-
-        if K==2
-
-            % Estimate dropout transfer parameters
-            theta = mle_td(X,Z, 'blankout');
-
-            % Analytical solution to theta=1 => w=0
-            ix = find(theta~=1);
-
-            % Check for y in {-1,+1}
-            if ~isempty(setdiff(unique(yQ), [-1,1])); yQ(yQ~=1) = -1; end
-
-            % Minimize loss
-            if ~isrow(yQ); yQ = yQ'; end
-            w = minFunc(@flda_log_blankout_grad, zeros(length(ix),1), options, X(ix,:),yQ,theta(ix),p.Results.l2);
-
-            % Bookkeeping
-            W = zeros(M,1);
-            W(ix) = w;
-            W = [W -W];
-
-        else
-
-            W = zeros(M,K);
-            theta = cell(1,K);
-            for k = 1:K
-
-                % Labels
-                yk = (yQ==k);
-
-                % 50up-50down resampling
-                ix = randsample(find(yk==0), floor(.5*sum(1-yk)));
-                Xk = [X(:,ix) repmat(X(:,yk), [1 floor((K-1)/2)])];
-                yk = [double(yk(ix))-1; ones(floor((K-1)./2)*sum(yk),1)];
-
-                % Estimate blankout transfer parameters
-                theta{k} = mle_td(Xk,Z, 'blankout');
-
-                % Analytical solution to theta=1 => w=0
-                ix = find(theta{k}~=1);
-
-                % Minimize loss
-                if ~isrow(yk); yk = yk'; end
-                w = minFunc(@flda_log_blankout_grad, zeros(length(ix),1), options, Xk(ix,:),yk,theta{k}(ix),p.Results.l2);
-
-                % Bookkeeping
-                W(ix,k) = w;
-            end
+        % Second moment of transfer distribution
+        V = zeros(D,D,N);
+        for i = 1:N
+            V(:,:,i) = diag(theta.*(1-theta)).*(X(i,:)'*X(i,:));
         end
     otherwise
-        error('Combination of loss and transfer model not implemented');
+        error('Transfer distribution not implemented');
 end
 
+switch p.Results.loss
+
+    case {'qd', 'quadratic', 'squared'}
+
+        % Least squares solution
+        W = (E'*E + sum(V,3) + p.Results.l2*eye(D))\(E'*Y);
+
+    case {'lr', 'log', 'logistic'}
+
+        % Set up a one-vs-rest 
+        W = zeros(D,K);
+        for k = 1:K
+
+            % Minimize loss function for classifier parameters
+            W(:,k) = minFunc(@flda_log_grad, randn(D,1), options, X, Y(:,k), E, V, p.Results.l2);
+
+        end
+
+    otherwise
+        error('Loss function not implemented yet');
 end
 
-function [L, dL] = flda_log_dropout_grad(W,X,Y,theta,l2)
-% This function eZects an 1xN label vector Y with labels -1 and +1.
-
-% Precompute
-wx = W' * X;
-m = 1*max(-wx,wx);
-Ap = eZ(wx -m) + eZ(-wx -m);
-An = eZ(wx -m) - eZ(-wx -m);
-dAwx = An./Ap;
-d2Awx = 2*eZ(-2*m)./Ap.^2;
-qX1 = bsxfun(@times, 1-theta, X);
-qX2 = bsxfun(@times, -theta, X);
-qX3 = bsxfun(@times, theta.*(1-theta),X.^2);
-qX4 = bsxfun(@times, 2-theta,X);
-
-% Negative log-likelihood (-log p(y|x))
-L = sum(-Y.* (W'*qX1) + log(Ap) +m,2);
-
-% First order eZansion term
-T1 = sum(dAwx.*(W'*qX2),2);
-
-% Second order eZansion term
-Q2 = bsxfun(@times,d2Awx,qX2)*qX4' + diag(sum(bsxfun(@times,qX3,d2Awx),2));
-T2 = W'*Q2*W;
-
-% Compute loss
-L = L + T1 + T2;
-
-% Additional l2-regularization
-L = L +  l2 *(sum(W(:).^2));
-
-% Only compute gradient if requested
-if nargout > 1
-
-    % Compute partial derivative of negative log-likelihood
-    dL = qX1*-Y' + X*dAwx';
-
-    % Compute partial derivative of first-order term
-    dT1 = X*((1-dAwx.^2).*(W'*qX2))' + qX2*dAwx';
-
-    % Compute partial derivative of second-order term
-    wQw = (W'*qX2).*(W'*qX4) + W'.^2*qX3;
-    dT2 = (Q2+Q2')*W + X*(-4*eZ(-2*m).*An./Ap.^3.*wQw)';
-
-    % Gradient
-    dL = dL + dT1 + dT2;
-
-    % Additional l2-regularization
-    dL = dL + 2.*l2.*W(:);
-end
-end
-
-function [L, dL] = flda_log_blankout_grad(W,X,Y,theta,l2)
-% This function eZects an 1xN label vector Y with labels -1 and +1.
-
-% Compute negative log-likelihood
-wx = W' * X;
-m = max(wx, -wx);
-Awx = eZ( wx-m) + eZ(-wx-m);
-ll = -Y .* wx + log(Awx) + m;
-
-% Numerical stability issues
-theta = min(theta,0.9999);
-
-% Compute corrupted log-partition function
-sgm = 1./(1 + eZ(-2*wx));
-Vx = bsxfun(@times, 1 ./ (1 - theta) - 1, X .^ 2);
-Vy = (W .^ 2)' * Vx;
-Vwx = 4 * sgm .* (1 - sgm);
-R = .5*Vy.*Vwx;
-
-% EZected cost
-L = sum(ll+R, 2) + l2 .*sum(W.^2);
-
-% Only compute gradient if requested
-if nargout > 1
-
-    % Compute likelihood gradient
-    dll = -Y*X' + ((eZ( wx-m) - eZ(-wx-m))./ Awx) * X';
-
-    % Compute regularizer gradient
-    dR = Vwx.*((1-sgm) - sgm).*Vy*X' + W'.* (Vwx * Vx');
-
-    % Gradient
-    dL = dll' + dR' + 2.*l2.*W;
+% Predict target labels
+[~,pred] = max(Z*W, [], 2);
 
 end
-end
+
 
 function [theta] = mle_td(X,Z,dist)
-% Function to maximum likelihood estimation of transfer model parameters
+% Maximum likelihood estimation of transfer model parameters
+
 switch dist
     case {'blankout','dropout'}
-        theta = max(0,1-mean(Z>0,2)./mean(X>0,2));
+
+        % Rate parameters
+        eta  = mean(X>0,1);
+        zeta = mean(Z>0,1);
+
+        % Ratio of rate parameters
+        theta = max(0, 1 - zeta ./ eta);
+
     otherwise
         error('Transfer model not implemented');
 end
+
+end
+
+function [R, dR] = flda_log_grad(w,X,y,E,V,l2)
+% Input:    W       classifier weights (D features x 1 classes)
+%           X       source data (N samples x D features)
+%           y       source labels (N x 1) in {-1,+1}
+%           E       expected value of the transfer distribution
+%           V       variance of the transfer distribution
+%           l2      l2-regularization parameters
+%
+% Output:   R       value of risk function
+%           dR      gradient of risk w.r.t. w
+%
+% Wouter Kouw
+% Last update: 04-01-2018
+
+% Data shape
+[N,~] = size(X);
+
+% Check for y in {-1,+1}
+if ~isempty(setdiff(unique(y), [-1,+1]))
+    y(y~=1) = -1;
+end
+
+% Precompute terms
+Xw = X*w;
+Ew = E*w;
+alpha = exp( Xw) + exp(-Xw);
+beta  = exp( Xw) - exp(-Xw);
+gamma = exp( Xw).*X + exp(-Xw).*X;
+delta = exp( Xw).*X - exp(-Xw).*X;
+
+% Log-partition function
+A = log(alpha);
+
+% First-order partial derivative of log-partition w.r.t. XW
+dA = beta./ alpha;
+
+% Second-order partial derivative of log-partition w.r.t. XW
+d2A = 1 - beta.^2./alpha.^2;
+
+% Compute pointwise loss (negative log-likelihood)
+L = zeros(N,1);
+for i = 1:N
+    L(i) = -y(i).*Ew(i) + A(i) + dA(i).*(Ew(i) - Xw(i)) + 1./2*d2A(i)*w'*V(:,:,i)*w;
+end
+
+% Risk is average loss
+R = sum(L,1);
+
+% Add regularization
+R = R + l2*sum(sum(w.^2, 2), 1);
+
+if nargout > 1
+
+    dR = 0;
+    for i = 1:N
+
+        t1 = -y(i)*E(i,:)';
+
+        t2 = beta(i)./alpha(i)*X(i,:)';
+
+        t3 = (gamma(i,:)./alpha(i) - beta(i)*delta(i,:)./alpha(i).^2)' *(Ew(i) - Xw(i));
+
+        t4 = beta(i)./alpha(i).*(E(i,:) - X(i,:))';
+
+        t5 = 1./2.*(1 - beta(i).^2./alpha(i).^2)*(V(:,:,i) + V(:,:,i)')*w;
+
+        t6 = -(beta(i).*gamma(i,:)./alpha(i).^2 - beta(i).^2.*delta(i,:)./alpha(i).^3)'*(w'*V(:,:,i)*w);
+
+        dR = dR + t1 + t2 + t3 + t4 + t5 + t6;
+
+    end
+
+    % Add regularization
+    dR = dR + l2*2.*w;
+end
+
 end

@@ -25,7 +25,7 @@ addpath(genpath('util'));
 
 %% Select adaptive classifier to test
 
-aclfr = 'rba';
+aclfr = 'iw';
 
 %% Generate domains
 
@@ -39,7 +39,7 @@ end
 
 % Number of samples
 N = 100;
-M = 100;
+M = 40;
 
 % Classes
 labels = [1,2];
@@ -54,35 +54,39 @@ switch lower(pd)
         % Source domain
         pi_S = [1./2, 1./2];
         X = [bsxfun(@plus, randn(round(N*pi_S(1)),D), -1*ones(1,D));
-            bsxfun(@plus, randn(round(N*pi_S(2)),D), +1*ones(1,D))];
+             bsxfun(@plus, randn(round(N*pi_S(2)),D), +1*ones(1,D))];
         y = [1*ones(round(N*pi_S(1)),1);
-            2*ones(round(N*pi_S(2)),1)];
+             2*ones(round(N*pi_S(2)),1)];
         
         % Target domain
         pi_T = [1./2, 1./2];
         Z = [bsxfun(@plus, randn(round(M*pi_T(1)),D), -0.5*ones(1,D));
-            bsxfun(@plus, randn(round(M*pi_T(2)),D), +1.5*ones(1,D))];
+             bsxfun(@plus, randn(round(M*pi_T(2)),D), +1.5*ones(1,D))];
         u = [1*ones(round(M*pi_T(1)),1);
-            2*ones(round(M*pi_T(2)),1)];
+             2*ones(round(M*pi_T(2)),1)];
         
     case 'poisson'
         
         % Dimensionality
-        D = 500;
+        D = 50;
         
         % Source domain
+        lambda1 = linspace(1e-5,2,D);
+        lambda2 = linspace(1e-5,2,D)+1;
         pi_S = [1./2, 1./2];
-        X = [poissrnd(.2*ones(round(N*pi_S(1)),D), [round(N*pi_S(1)), D]);
-            poissrnd(.5*ones(round(N*pi_S(2)),D), [round(N*pi_S(2)), D])];
+        X = [poissrnd(ones(round(N*pi_S(1)),1)*lambda1, [round(N*pi_S(1)), D]);
+             poissrnd(ones(round(N*pi_S(2)),1)*lambda2, [round(N*pi_S(2)), D])];
         y = [1*ones(round(N*pi_S(1)),1);
-            2*ones(round(N*pi_S(2)),1)];
+             2*ones(round(N*pi_S(2)),1)];
         
         % Target domain
         pi_T = [1./2, 1./2];
-        Z = [poissrnd(.3*ones(round(M*pi_T(1)),D), [round(M*pi_T(1)), D]);
-            poissrnd(.6*ones(round(M*pi_T(2)),D), [round(M*pi_T(2)), D])];
+        lambda1 = linspace(1e-5,1,D);
+        lambda2 = linspace(1,2,D);
+        Z = [poissrnd(ones(round(M*pi_T(1)),1)*lambda1, [round(M*pi_T(1)), D]);
+             poissrnd(ones(round(M*pi_T(2)),1)*lambda2, [round(M*pi_T(2)), D])];
         u = [1*ones(round(M*pi_T(1)),1);
-            2*ones(round(M*pi_T(2)),1)];
+             2*ones(round(M*pi_T(2)),1)];
         
 end
 
@@ -105,15 +109,15 @@ switch aclfr
     case 'suba'
         [~,pred] = suba(X,Z,y, 'nC', floor(D/2));
     case 'tca'
-        [~,pred,C,K] = tca(X,Z,y, 'nC', 2);
+        [~,pred] = tca(X,Z,y, 'nC', 2);
     case 'flda'
-        W = flda(X,Z,y);
+        [~,pred] = flda(X,Z,y, 'loss', 'lr', 'l2', 0);
     case 'gfk'
         [~,pred] = gfk(X,Z,y, 'd', floor(D/2));
     case 'scl'
         [~,pred] = scl(X,Z,y, 'm', 50, 'h', 25);
     case 'rba'
-        [W,pred] = rba(X,Z,y, 'gamma', 0.1);
+        [~,pred] = rba(X,Z,y, 'gamma', 0.1);
     otherwise
         error('Classifier unknown');
 end
