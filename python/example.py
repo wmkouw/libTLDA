@@ -77,7 +77,7 @@ pred_n = lr.predict(Z)
 # Train an adaptive classifier
 if aclfr == 'iw':
     # Train an importance-weighted classifier
-    _, pred_a = ImportanceWeightedClassifier().fit(X, y, Z, iwe='lr')
+    _, pred_a = ImportanceWeightedClassifier(iwe='lr').fit(X, y, Z)
 
 # elif aclfr == 'tca':
 #     # Train an adaptive classifier based on transfer component analysis

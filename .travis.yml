@@ -1,0 +1,31 @@
+language: generic
+dist: trusty
+sudo: false
+
+os:
+  - linux
+
+env:
+  matrix:
+    - PYTHON_VERSION=2.7
+
+before_install:
+  - wget "http://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh" -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - conda config --set always_yes yes
+  - conda update -q conda
+  - conda create -q -n test-environment python=$PYTHON_VERSION pip numpy
+  - source activate test-environment
+  # - "pip install -q pytest"
+  # - "pip install 'coverage<4'"  # After 4, there is some issue when using python 3.2
+  - "pip install -r requirements.txt"
+  - "conda list" # Show the package versions (for debugging)
+
+install:
+  - "echo done"
+
+# command to run tests, e.g. python setup.py test
+script:
+  - python setup.py install
+#  - coverage run --source=python -m pytest
