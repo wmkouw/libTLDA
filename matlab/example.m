@@ -23,8 +23,8 @@ close all;
 clearvars;
 addpath(genpath('util'));
 
-%% Select adaptive classifier to test
 
+%% Select adaptive classifier to test
 aclfr = 'iw';
 
 %% Generate domains
@@ -47,29 +47,29 @@ K = length(labels);
 
 switch lower(pd)
     case 'normal'
-        
+
         % Dimensionality
         D = 2;
-        
+
         % Source domain
         pi_S = [1./2, 1./2];
         X = [bsxfun(@plus, randn(round(N*pi_S(1)),D), -1*ones(1,D));
              bsxfun(@plus, randn(round(N*pi_S(2)),D), +1*ones(1,D))];
         y = [1*ones(round(N*pi_S(1)),1);
              2*ones(round(N*pi_S(2)),1)];
-        
+
         % Target domain
         pi_T = [1./2, 1./2];
         Z = [bsxfun(@plus, randn(round(M*pi_T(1)),D), -0.5*ones(1,D));
              bsxfun(@plus, randn(round(M*pi_T(2)),D), +1.5*ones(1,D))];
         u = [1*ones(round(M*pi_T(1)),1);
              2*ones(round(M*pi_T(2)),1)];
-        
+
     case 'poisson'
-        
+
         % Dimensionality
         D = 50;
-        
+
         % Source domain
         lambda1 = linspace(1e-5,2,D);
         lambda2 = linspace(1e-5,2,D)+1;
@@ -78,7 +78,7 @@ switch lower(pd)
              poissrnd(ones(round(N*pi_S(2)),1)*lambda2, [round(N*pi_S(2)), D])];
         y = [1*ones(round(N*pi_S(1)),1);
              2*ones(round(N*pi_S(2)),1)];
-        
+
         % Target domain
         pi_T = [1./2, 1./2];
         lambda1 = linspace(1e-5,1,D);
@@ -87,7 +87,7 @@ switch lower(pd)
              poissrnd(ones(round(M*pi_T(2)),1)*lambda2, [round(M*pi_T(2)), D])];
         u = [1*ones(round(M*pi_T(1)),1);
              2*ones(round(M*pi_T(2)),1)];
-        
+
 end
 
 %% Train naive classifier
@@ -98,32 +98,30 @@ Wn = mlr(X,y, 'l2', 1e-3);
 % Predictions
 [~,pred_n] = max([Z,ones(M,1)]*Wn,[],2);
 
-% Error rate
-err_naive = mean(pred_n~=u);
-
 %% Train adaptive classifier
 
 switch aclfr
     case 'iw'
-        [~,pred] = iw(X,Z,y, 'iwe', 'kd');
+        [~,pred_a] = iw(X,Z,y, 'iwe', 'kd');
     case 'suba'
-        [~,pred] = suba(X,Z,y, 'nC', floor(D/2));
+        [~,pred_a] = suba(X,Z,y, 'nC', floor(D/2));
     case 'tca'
-        [~,pred] = tca(X,Z,y, 'nC', 2);
+        [~,pred_a] = tca(X,Z,y, 'nC', 2);
     case 'flda'
-        [~,pred] = flda(X,Z,y, 'loss', 'lr', 'l2', 0);
+        [~,pred_a] = flda(X,Z,y, 'loss', 'lr', 'l2', 0);
     case 'gfk'
-        [~,pred] = gfk(X,Z,y, 'd', floor(D/2));
+        [~,pred_a] = gfk(X,Z,y, 'd', floor(D/2));
     case 'scl'
-        [~,pred] = scl(X,Z,y, 'm', 50, 'h', 25);
+        [~,pred_a] = scl(X,Z,y, 'm', 50, 'h', 25);
     case 'rba'
-        [~,pred] = rba(X,Z,y, 'gamma', 0.1);
+        [~,pred_a] = rba(X,Z,y, 'gamma', 0.1);
     otherwise
         error('Classifier unknown');
 end
 
 % Error rate
-err_adapt = mean(pred~=u);
+err_naive = mean(pred_n ~= u);
+err_adapt = mean(pred_a ~= u);
 
 %% Report results
 disp(['Error naive: ' num2str(err_naive)]);

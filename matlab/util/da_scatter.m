@@ -7,6 +7,9 @@ addOptional(p, 'u', []);
 addOptional(p, 'fh', []);
 parse(p, varargin{:});
 
+% Labels
+labels = unique(y);
+
 % Determine axes limits
 x_axis = [min([X(:,1); Z(:,1)]), max([X(:,1); Z(:,1)])];
 y_axis = [min([X(:,2); Z(:,2)]), max([X(:,2); Z(:,2)])];

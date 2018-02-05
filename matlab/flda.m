@@ -99,7 +99,7 @@ switch p.Results.loss
         W = zeros(D,K);
         for k = 1:K
 
-            % Minimize loss function for classifier parameters
+            Minimize loss function for classifier parameters
             W(:,k) = minFunc(@flda_log_grad, randn(D,1), options, X, Y(:,k), E, V, p.Results.l2);
 
         end
