@@ -53,8 +53,8 @@ N1 = N - N0
 X0 = rnd.randn(N0, D) + -1*np.ones((1, D))
 X1 = rnd.randn(N1, D) + +1*np.ones((1, D))
 X = np.concatenate((X0, X1), axis=0)
-y = np.concatenate((labels[0]*np.ones((N0, 1)),
-                    labels[1]*np.ones((N1, 1))), axis=0)
+y = np.concatenate((labels[0]*np.ones((N0,)),
+                    labels[1]*np.ones((N1,))), axis=0)
 
 # Target domain
 pi_T = [1./2, 1./2]
@@ -63,8 +63,8 @@ M1 = M - M0
 Z0 = rnd.randn(M0, D) + -1*np.ones((1, D))
 Z1 = rnd.randn(M1, D) + +1*np.ones((1, D))
 Z = np.concatenate((Z0, Z1), axis=0)
-u = np.concatenate((labels[0]*np.ones((M0, 1)),
-                    labels[1]*np.ones((M1, 1))), axis=0)
+u = np.concatenate((labels[0]*np.ones((M0,)),
+                    labels[1]*np.ones((M1,))), axis=0)
 
 """Classifiers"""
 
@@ -77,15 +77,15 @@ pred_n = lr.predict(Z)
 # Train an adaptive classifier
 if aclfr == 'iw':
     # Train an importance-weighted classifier
-    _, pred_a = ImportanceWeightedClassifier(iwe='lr').fit(X, y, Z)
+    _, pred_a = ImportanceWeightedClassifier(iwe='kmm').fit(X, y, Z)
 
 # elif aclfr == 'tca':
 #     # Train an adaptive classifier based on transfer component analysis
 #     _, pred_a = TransferComponentAnalysisClassifier(X, y)
 
 # Compute error rates
-err_naive = np.mean(pred_n != u[:, 0], axis=0)
-err_adapt = np.mean(pred_a != u[:, 0], axis=0)
+err_naive = np.mean(pred_n != u, axis=0)
+err_adapt = np.mean(pred_a != u, axis=0)
 
 # Report results
 print('Error naive: ' + str(err_naive))

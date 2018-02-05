@@ -10,3 +10,4 @@ dependencies:
 - scikit-learn>=0.15.0
 - Keras>=2.0.0
 - tensorflow>=0.12.1
+- cvxopt>=1.1.9
