@@ -1,3 +1,4 @@
+[![BuildStatus](https://travis-ci.org/wmkouw/libTLDA.svg?branch=master)](https://travis-ci.org/wmkouw/libTLDA)
 # LibTLDA: transfer learning and domain-adaptive classifiers
 
 This package contains the following classifiers: <br>
@@ -12,20 +13,29 @@ This package contains the following classifiers: <br>
 Python-2.7 only, at the moment.
 
 ### Installation
-First clone the repository:
+First clone and enter the repository:
 ```
 sudo apt-get install git
 git clone https://github.com/wmkouw/libTLDA
+cd libTLDA/
 ```
 
-Creating a new conda environment takes care of all dependencies:
+Creating a new conda environment takes care of all dependencies. <br>
+First, get conda (skip this step if you already have it):
+```
+wget http://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O ~/miniconda.sh
+bash ~/miniconda.sh -b -p $HOME/miniconda
+export PATH="$HOME/miniconda/bin:$PATH"
+```
+Then, create an activate a new environment:
 ```
 conda env create -f environment.yml
 source activate libtlda
 ```
 
-Afterwards, run the following setup script:
+Afterwards, enter python directory and run the following setup script:
 ```
+cd python/
 python setup.py install
 ```
 
@@ -42,13 +52,20 @@ python example.py
 Version: 9.2.0.556344 (R2017a) <br>
 
 ### Installation:
-The installation script downloads all dependencies ([minFunc](https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html), [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvm/)) and adds them as well libTLDA to your path (matlab command window):
+First clone the repository and change directory to matlab:
+```
+sudo apt-get install git
+git clone https://github.com/wmkouw/libTLDA
+cd libTLDA/matlab/
+```
+
+In the matlab command window, call the installation script. It downloads all dependencies ([minFunc](https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html), [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvm/)) and adds them - along with libTLDA - to your path (matlab command window):
 ```
 install.m
 ```
 
 ### Usage
-Example script - can be edited to test different classifiers (matlab command window):
+In matlab, call the example script (can be edited to test different classifiers):
 ```
 example.m
 ```

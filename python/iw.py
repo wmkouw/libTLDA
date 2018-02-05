@@ -5,7 +5,7 @@ import numpy as np
 import scipy.stats as st
 from scipy.spatial.distance import cdist
 import sklearn as sk
-from sklearn.SVM import LinearSVC
+from sklearn.svm import LinearSVC
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.model_selection import cross_val_predict
 from os.path import basename
@@ -26,7 +26,8 @@ class ImportanceWeightedClassifier(object):
         """
         Select a particular type of importance-weighted classifier.
 
-        INPUT   (1) str 'iwe': importance-weight estimator (def:'lr')
+        INPUT   (1) str 'iwe': importance weight estimator, options: 'lr',
+                    'nn', 'rg', 'kmm', 'kde' (def: 'lr')
                 (2) float 'l2': l2-regularization parameter value (def:0.01)
                 (3) boolean 'smoothing': whether to apply Laplace smoothing to
                     the nearest-neighbour importance-weight estimator
@@ -152,8 +153,6 @@ class ImportanceWeightedClassifier(object):
         INPUT   (1) array 'X': source data (N samples by D features)
                 (2) array 'y': source labels (N samples by 1)
                 (3) array 'Z': target data (M samples by D features)
-                (4) str 'iwe': importance weight estimator,
-                    options: 'lr', 'nn', 'rg', 'kmm', 'kde' (def: 'lr')
         OUTPUT  (1) array 'theta': trained classifier parameters
                 (2) array 'preds': predictions of trained classifier on given
                     target samples
@@ -161,7 +160,7 @@ class ImportanceWeightedClassifier(object):
         # Find importance-weights
         if self.iwe == 'lr':
             w = self.iwe_lr(X, Z)
-        elif self.iwe == 'gauss':
+        elif self.iwe == 'rg':
             w = self.iwe_lr(X, Z)
         elif self.iwe == 'nn':
             w = self.iwe_nn(X, Z)

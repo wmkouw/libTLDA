@@ -17,8 +17,8 @@ before_install:
   - conda update -q conda
   - conda create -q -n test-environment python=$PYTHON_VERSION pip numpy
   - source activate test-environment
-  # - "pip install -q pytest"
-  # - "pip install 'coverage<4'"  # After 4, there is some issue when using python 3.2
+  - "pip install -q pytest"
+  - "pip install -q coverage"
   - "pip install -r requirements.txt"
   - "conda list" # Show the package versions (for debugging)
 
@@ -28,4 +28,6 @@ install:
 # command to run tests, e.g. python setup.py test
 script:
   - python setup.py install
+  - cd python
+  - python example.py
 #  - coverage run --source=python -m pytest
