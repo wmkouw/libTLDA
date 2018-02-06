@@ -214,29 +214,29 @@ class TransferComponentClassifier(object):
         # Store training data dimensionality
         self.train_data_dim = DX
 
-    def predict(self, X_):
+    def predict(self, Z_):
         """
         Make predictions on new dataset.
 
-        INPUT   (1) array 'X_': new data set (N samples by D features)
-        OUTPUT  (2) array 'preds': label predictions (N samples by 1)
+        INPUT   (1) array 'Z_': new data set (M samples by D features)
+        OUTPUT  (2) array 'preds': label predictions (M samples by 1)
         """
         # Data shape
-        N, D = X_.shape
+        M, D = Z_.shape
 
         # If classifier is trained, check for same dimensionality
         if self.is_trained:
             assert self.train_data_dim == D
 
         # Compute kernel for new data
-        K = self.kernel(X_, self.XZ, type=self.kernel_type,
+        K = self.kernel(Z_, self.XZ, type=self.kernel_type,
                         bandwidth=self.bandwidth, order=self.order)
 
         # Map new data onto transfer components
-        X_ = np.dot(K[:N, :], self.C)
+        Z_ = np.dot(K, self.C)
 
         # Call scikit's predict function
-        preds = self.clf.predict(X_)
+        preds = self.clf.predict(Z_)
 
         # For quadratic loss function, correct predictions
         if self.loss == 'quadratic':

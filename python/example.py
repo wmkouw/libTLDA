@@ -29,10 +29,11 @@ import matplotlib.pyplot as plt
 
 from iw import ImportanceWeightedClassifier
 from tca import TransferComponentClassifier
+from suba import SubspaceAlignedClassifier
 
 """Select adaptive classifier"""
 
-aclfr = 'tca'
+aclfr = 'suba'
 viz = False
 
 """Generate synthetic data set"""
@@ -85,6 +86,9 @@ if aclfr == 'iw':
 elif aclfr == 'tca':
     # Classifier based on transfer component analysis
     clf = TransferComponentClassifier(loss='logistic', mu=1.)
+elif aclfr == 'suba':
+    # Classifier based on subspace alignment
+    clf = SubspaceAlignedClassifier(loss='logistic')
 
 # Train classifier
 clf.fit(X, y, Z)
