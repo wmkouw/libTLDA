@@ -42,10 +42,6 @@ class ImportanceWeightedClassifier(object):
                     'diste', 'rbf' (def: 'rbf')
                 (7) float 'bandwidth': kernel bandwidth parameter value for
                     kernel-based weight estimators (def: 1)
-        OUTPUT  (1) array 'preds': predictions on given target data (M samples
-                    by 1)
-                (2) array 'theta': linear classifier parameters (D features by
-                    K classes)
         """
         self.loss = loss
         self.l2 = l2
@@ -55,6 +51,26 @@ class ImportanceWeightedClassifier(object):
         self.kernel_type = kernel_type
         self.bandwidth = bandwidth
 
+        # Initialize untrained classifiers based on choice of loss function
+        if self.loss == 'logistic':
+            # Logistic regression model
+            self.iwclf = LogisticRegression()
+        elif self.loss == 'quadratic':
+            # Least-squares model
+            self.iwclf = LinearRegression()
+        elif self.loss == 'hinge':
+            # Linear support vector machine
+            self.iwclf = LinearSVC()
+        else:
+            # Other loss functions are not implemented
+            raise NotImplementedError
+
+        # Whether model has been trained
+        self.is_trained = False
+
+        # Dimensionality of training data
+        self.train_data_dim = ''
+
     def iwe_ratio_gaussians(self, X, Z):
         """
         Estimate importance weights based on a ratio of Gaussian distributions.
@@ -63,13 +79,20 @@ class ImportanceWeightedClassifier(object):
                 (2) array 'Z': target data (M samples by D features)
         OUTPUT  (1) array: importance weights (N samples by 1)
         """
+        # Data shapes
+        N, DX = X.shape
+        M, DZ = Z.shape
+
+        # Assert equivalent dimensionalities
+        assert DX == DZ
+
         # Sample means in each domain
         mu_X = np.mean(X, axis=0)
         mu_Z = np.mean(Z, axis=0)
 
         # Sample covariances
-        Si_X = np.cov(X)
-        Si_Z = np.cov(Z)
+        Si_X = np.cov(X.T)
+        Si_Z = np.cov(Z.T)
 
         # Check for positive-definiteness of covariance matrices
         if not (is_pos_def(Si_X) or is_pos_def(Si_Z)):
@@ -80,19 +103,45 @@ class ImportanceWeightedClassifier(object):
                 print('Adding regularization: ' + str(1**regct))
 
                 # Add regularization
-                Si_X += 1**regct
-                Si_Z += 1**regct
+                Si_X += np.eye(DX)*10.**regct
+                Si_Z += np.eye(DZ)*10.**regct
 
                 # Increment regularization counter
                 regct += 1
 
         # Compute probability of X under each domain
-        pT = st.multivariate_normal(X, mu_Z, Si_Z)
-        pS = st.multivariate_normal(X, mu_X, Si_X)
+        pT = st.multivariate_normal.pdf(X, mu_Z, Si_Z)
+        pS = st.multivariate_normal.pdf(X, mu_X, Si_X)
 
         # Check for numerics
-        assert not np.any(np.isnan(pT) or (pT == 0))
-        assert not np.any(np.isnan(pS) or (pS == 0))
+        assert not np.any(np.isnan(pT)) or np.any(pT == 0)
+        assert not np.any(np.isnan(pS)) or np.any(pS == 0)
+
+        # Return the ratio of probabilities
+        return pT / pS
+
+    def iwe_kernel_densities(self, X, Z):
+        """
+        Estimate importance weights based on kernel density estimation.
+
+        INPUT   (1) array 'X': source data (N samples by D features)
+                (2) array 'Z': target data (M samples by D features)
+        OUTPUT  (1) array: importance weights (N samples by 1)
+        """
+        # Data shapes
+        N, DX = X.shape
+        M, DZ = Z.shape
+
+        # Assert equivalent dimensionalities
+        assert DX == DZ
+
+        # Compute probabilities based on source kernel densities
+        pT = st.gaussian_kde(Z.T).pdf(X.T)
+        pS = st.gaussian_kde(X.T).pdf(X.T)
+
+        # Check for numerics
+        assert not np.any(np.isnan(pT)) or np.any(pT == 0)
+        assert not np.any(np.isnan(pS)) or np.any(pS == 0)
 
         # Return the ratio of probabilities
         return pT / pS
@@ -136,7 +185,7 @@ class ImportanceWeightedClassifier(object):
                 (2) array 'Z': target data (M samples by D features)
         OUTPUT  (1) array: importance weights (N samples by 1)
         """
-        # Number of source samples
+        # Data shapes
         N, DX = X.shape
         M, DZ = Z.shape
 
@@ -148,15 +197,15 @@ class ImportanceWeightedClassifier(object):
 
         # Count target samples within each source Voronoi cell
         ix = np.argmin(d, axis=1)
-        iw = hist(ix, np.arange(N))
+        iw, _ = np.array(np.histogram(ix, np.arange(N+1)))
 
         # Laplace smoothing
         if self.smoothing:
-            iw = (iw + 1) / (N + 1)
+            iw = (iw + 1.) / (N + 1)
 
         # Weight clipping
         if self.clip > 0:
-            iw = min(self.clip, max(0, iw))
+            iw = np.minimum(self.clip, np.maximum(0, iw))
 
         # Return weights
         return iw
@@ -169,7 +218,7 @@ class ImportanceWeightedClassifier(object):
                 (2) array 'Z': target data (M samples by D features)
         OUTPUT  (1) array: importance weights (N samples by 1)
         """
-        # Number of source samples
+        # Data shapes
         N, DX = X.shape
         M, DZ = Z.shape
 
@@ -215,10 +264,15 @@ class ImportanceWeightedClassifier(object):
         INPUT   (1) array 'X': source data (N samples by D features)
                 (2) array 'y': source labels (N samples by 1)
                 (3) array 'Z': target data (M samples by D features)
-        OUTPUT  (1) array 'theta': trained classifier parameters
-                (2) array 'preds': predictions of trained classifier on given
-                    target samples
+        OUTPUT  None
         """
+        # Data shapes
+        N, DX = X.shape
+        M, DZ = Z.shape
+
+        # Assert equivalent dimensionalities
+        assert DX == DZ
+
         # Find importance-weights
         if self.iwe == 'lr':
             w = self.iwe_logistic_discrimination(X, Z)
@@ -227,7 +281,7 @@ class ImportanceWeightedClassifier(object):
         elif self.iwe == 'nn':
             w = self.iwe_nearest_neighbours(X, Z)
         elif self.iwe == 'kde':
-            w = self.iwe_kernel_density(X, Z)
+            w = self.iwe_kernel_densities(X, Z)
         elif self.iwe == 'kmm':
             w = self.iwe_kernel_mean_matching(X, Z)
         else:
@@ -236,25 +290,51 @@ class ImportanceWeightedClassifier(object):
         # Train a weighted classifier
         if self.loss == 'logistic':
             # Logistic regression model with sample weights
-            iwclf = LogisticRegression().fit(X, y, w)
-
+            self.iwclf.fit(X, y, w)
         elif self.loss == 'quadratic':
             # Least-squares model with sample weights
-            iwclf = LinearRegression().fit(X, y, w)
-
+            self.iwclf.fit(X, y, w)
         elif self.loss == 'hinge':
             # Linear support vector machine with sample weights
-            iwclf = LinearSVC().fit(X, y, w)
-
+            self.iwclf.fit(X, y, w)
         else:
             # Other loss functions are not implemented
             raise NotImplementedError
 
-        # Get trained classifier parameters
-        theta = iwclf.get_params()
+        # Mark classifier as trained
+        self.is_trained = True
 
-        # Make predictions on given target data
-        preds = iwclf.predict(Z)
+        # Store training data dimensionality
+        self.train_data_dim = DX
 
-        # Return classifier parameters and predictions
-        return theta, preds
+    def predict(self, X_):
+        """
+        Make predictions on new dataset.
+
+        INPUT   (1) array 'X_': new data set (N samples by D features)
+        OUTPUT  (2) array 'preds': label predictions (N samples by 1)
+        """
+        # Data shape
+        N, D = X_.shape
+
+        # If classifier is trained, check for same dimensionality
+        if self.is_trained:
+            assert self.train_data_dim == D
+
+        # Call scikit's predict function
+        preds = self.iwclf.predict(X_)
+
+        # For quadratic loss function, correct predictions
+        if self.loss == 'quadratic':
+            preds = (np.sign(preds)+1)/2.
+
+        # Return predictions array
+        return preds
+
+    def get_params(self):
+        """Get classifier parameters."""
+        return self.iwclf.get_params()
+
+    def is_trained(self):
+        """Check whether classifier is trained."""
+        return self.is_trained
