@@ -2,12 +2,13 @@
 # LibTLDA: transfer learning and domain-adaptive classifiers
 
 This package contains the following classifiers: <br>
-- iw: Importance-weighted classifier, with weight estimators:<br>
+- Importance-weighted classifier, with weight estimators:<br>
 	- Kernel density estimation <br>
-	- Ratio of Gaussians (Shimodaira, 2000) <br>
-	- Logistic discrimination (Bicket et al., 2009) <br>
-	- Kernel Mean Matching (Huang et al., 2006) <br>
-	- Nearest-neighbour-based weighting (Loog, 2015) <br>
+	- [Ratio of Gaussians (Shimodaira, 2000)](https://www.sciencedirect.com/science/article/pii/S0378375800001154) <br>
+	- [Logistic discrimination (Bickel et al., 2009)](http://www.jmlr.org/papers/v10/bickel09a.html) <br>
+	- [Kernel Mean Matching (Huang et al., 2006)](https://papers.nips.cc/paper/3075-correcting-sample-selection-bias-by-unlabeled-data) <br>
+	- [Nearest-neighbour-based weighting (Loog, 2015)](http://ieeexplore.ieee.org/document/6349714/) <br>
+- [Transfer Component Analysis (Pan et al, 2009)](http://ieeexplore.ieee.org/document/5640675/) <br>
 
 ## Python
 Python-2.7 only, at the moment.
@@ -71,12 +72,11 @@ example.m
 ```
 
 ### Matlab-specific classifiers:
-- scl: Structural Correspondence Learning (Blitzer et al., 2006) <br>
-- gfk: Geodesic Flow Kernel (Gong et al., 2012) <br>
-- tca: Transfer Component Analysis (Pan et al, 2009) <br>
-- suba: Subspace Alignment (Fernando et al., 2013) <br>
-- rba: Robust Bias-Aware (Liu & Ziebart, 2014) <br>
-- flda: Feature-Level Domain Adaptation (Kouw et al., 2016) <br>
+- [Structural Correspondence Learning (Blitzer et al., 2006)](https://dl.acm.org/citation.cfm?id=1610094) <br>
+- [Geodesic Flow Kernel (Gong et al., 2012)](https://dl.acm.org/citation.cfm?id=1610094) <br>
+- [Subspace Alignment (Fernando et al., 2013)](https://dl.acm.org/citation.cfm?id=1610094) <br>
+- [Robust Bias-Aware (Liu & Ziebart, 2014)](https://papers.nips.cc/paper/5458-robust-classification-under-sample-selection-bias) <br>
+- [Feature-Level Domain Adaptation (Kouw et al., 2016)](http://jmlr.org/papers/v17/15-206.html) <br>
 
 ## Contact:
 Questions, comments and bugs can be submitted in the issues tracker.

@@ -28,11 +28,11 @@ from sklearn.linear_model import LogisticRegression
 import matplotlib.pyplot as plt
 
 from iw import ImportanceWeightedClassifier
-# from tca import TransferComponentAnalysisClassifier
+from tca import TransferComponentClassifier
 
 """Select adaptive classifier"""
 
-aclfr = 'iw'
+aclfr = 'tca'
 viz = False
 
 """Generate synthetic data set"""
@@ -81,16 +81,16 @@ pred_n = lr.predict(Z)
 # Select adaptive classifier
 if aclfr == 'iw':
     # Call an importance-weighted classifier
-    iwclf = ImportanceWeightedClassifier(iwe='kde', loss='hinge')
-# elif aclfr == 'tca':
-#     # Train an adaptive classifier based on transfer component analysis
-#     _, pred_a = TransferComponentAnalysisClassifier(X, y)
+    clf = ImportanceWeightedClassifier(iwe='kde', loss='logistic')
+elif aclfr == 'tca':
+    # Classifier based on transfer component analysis
+    clf = TransferComponentClassifier(loss='logistic', mu=1.)
 
 # Train classifier
-iwclf.fit(X, y, Z)
+clf.fit(X, y, Z)
 
 # Make predictions
-pred_a = iwclf.predict(Z)
+pred_a = clf.predict(Z)
 
 # Compute error rates
 err_naive = np.mean(pred_n != u, axis=0)

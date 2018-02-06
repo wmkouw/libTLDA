@@ -54,13 +54,13 @@ class ImportanceWeightedClassifier(object):
         # Initialize untrained classifiers based on choice of loss function
         if self.loss == 'logistic':
             # Logistic regression model
-            self.iwclf = LogisticRegression()
+            self.clf = LogisticRegression()
         elif self.loss == 'quadratic':
             # Least-squares model
-            self.iwclf = LinearRegression()
+            self.clf = LinearRegression()
         elif self.loss == 'hinge':
             # Linear support vector machine
-            self.iwclf = LinearSVC()
+            self.clf = LinearSVC()
         else:
             # Other loss functions are not implemented
             raise NotImplementedError
@@ -290,13 +290,13 @@ class ImportanceWeightedClassifier(object):
         # Train a weighted classifier
         if self.loss == 'logistic':
             # Logistic regression model with sample weights
-            self.iwclf.fit(X, y, w)
+            self.clf.fit(X, y, w)
         elif self.loss == 'quadratic':
             # Least-squares model with sample weights
-            self.iwclf.fit(X, y, w)
+            self.clf.fit(X, y, w)
         elif self.loss == 'hinge':
             # Linear support vector machine with sample weights
-            self.iwclf.fit(X, y, w)
+            self.clf.fit(X, y, w)
         else:
             # Other loss functions are not implemented
             raise NotImplementedError
@@ -322,7 +322,7 @@ class ImportanceWeightedClassifier(object):
             assert self.train_data_dim == D
 
         # Call scikit's predict function
-        preds = self.iwclf.predict(X_)
+        preds = self.clf.predict(X_)
 
         # For quadratic loss function, correct predictions
         if self.loss == 'quadratic':
@@ -333,7 +333,7 @@ class ImportanceWeightedClassifier(object):
 
     def get_params(self):
         """Get classifier parameters."""
-        return self.iwclf.get_params()
+        return self.clf.get_params()
 
     def is_trained(self):
         """Check whether classifier is trained."""
