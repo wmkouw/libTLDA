@@ -24,7 +24,7 @@ class TransferComponentClassifier(object):
     def __init__(self, loss='logistic', l2=1.0, mu=1.0, num_components=1,
                  kernel_type='rbf', bandwidth=1.0, order=2.0):
         """
-        Select a particular type of importance-weighted classifier.
+        Select a particular type of transfer component classifier.
 
         INPUT   (1) str 'loss': loss function for weighted classifier, options:
                     'logistic', 'quadratic', 'hinge' (def: 'logistic')

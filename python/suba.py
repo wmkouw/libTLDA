@@ -24,7 +24,7 @@ class SubspaceAlignedClassifier(object):
 
     def __init__(self, loss='logistic', l2=1.0, num_components=1):
         """
-        Select a particular type of importance-weighted classifier.
+        Select a particular type of subspace aligned classifier.
 
         INPUT   (1) str 'loss': loss function for weighted classifier, options:
                     'logistic', 'quadratic', 'hinge' (def: 'logistic')
