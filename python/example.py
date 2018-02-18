@@ -32,10 +32,11 @@ from tca import TransferComponentClassifier
 from suba import SubspaceAlignedClassifier
 from scl import StructuralCorrespondenceClassifier
 from rba import RobustBiasAwareClassifier
+from flda import FeatureLevelDomainAdaptiveClassifier
 
 """Select adaptive classifier"""
 
-aclfr = 'rba'
+aclfr = 'flda'
 viz = False
 
 """Generate synthetic data set"""
@@ -59,8 +60,8 @@ N1 = N - N0
 X0 = rnd.randn(N0, D)*si_S + (-2, 0, 0)
 X1 = rnd.randn(N1, D)*si_S + (+2, 0, 0)
 X = np.concatenate((X0, X1), axis=0)
-y = np.concatenate((labels[0]*np.ones((N0,)),
-                    labels[1]*np.ones((N1,))), axis=0)
+y = np.concatenate((labels[0]*np.ones((N0,), dtype='int'),
+                    labels[1]*np.ones((N1,), dtype='int')), axis=0)
 
 # Target domain
 pi_T = [1./2, 1./2]
@@ -70,8 +71,8 @@ M1 = M - M0
 Z0 = rnd.randn(M0, D)*si_T + (-2, -2, 0)
 Z1 = rnd.randn(M1, D)*si_T + (+2, +2, 0)
 Z = np.concatenate((Z0, Z1), axis=0)
-u = np.concatenate((labels[0]*np.ones((M0,)),
-                    labels[1]*np.ones((M1,))), axis=0)
+u = np.concatenate((labels[0]*np.ones((M0,), dtype='int'),
+                    labels[1]*np.ones((M1,), dtype='int')), axis=0)
 
 """Classifiers"""
 
@@ -104,6 +105,10 @@ elif aclfr == 'scl':
 elif aclfr == 'rba':
     # Robust bias-aware classifier
     clf = RobustBiasAwareClassifier(l2=0.1, max_iter=1000)
+
+elif aclfr == 'flda':
+    # Feature-level domain-adaptive classifier
+    clf = FeatureLevelDomainAdaptiveClassifier(l2=0.1, max_iter=1000)
 
 else:
     raise ValueError('Adaptive classifier not recognized.')

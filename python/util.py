@@ -12,6 +12,24 @@ def is_pos_def(X):
     return np.all(np.linalg.eigvals(X) > 0)
 
 
+def one_not(y):
+    """Map to one-hot encoding with -1 as negatives."""
+    # Number of samples
+    N = y.shape[0]
+
+    # Number of classes
+    K = len(np.unique(y))
+
+    # Preallocate array
+    Y = -np.ones((N, K))
+
+    # Set k-th column to 1 for n-th sample
+    for n in range(N):
+        Y[n, y[n]] = 1
+
+    return Y
+
+
 def nullspace(A, atol=1e-13, rtol=0):
     """
     Compute an approximate basis for the nullspace of A.

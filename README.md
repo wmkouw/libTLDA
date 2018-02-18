@@ -12,6 +12,7 @@ This package contains the following classifiers: <br>
 - [Subspace Alignment (Fernando et al., 2013)](https://dl.acm.org/citation.cfm?id=1610094) <br>
 - [Structural Correspondence Learning (Blitzer et al., 2006)](https://dl.acm.org/citation.cfm?id=1610094) <br>
 - [Robust Bias-Aware (Liu & Ziebart, 2014)](https://papers.nips.cc/paper/5458-robust-classification-under-sample-selection-bias) <br>
+- [Feature-Level Domain Adaptation (Kouw et al., 2016)](http://jmlr.org/papers/v17/15-206.html) <br>
 
 ## Python
 Python-2.7 only, at the moment.
@@ -76,7 +77,6 @@ example.m
 
 ### Matlab-specific classifiers:
 - [Geodesic Flow Kernel (Gong et al., 2012)](https://dl.acm.org/citation.cfm?id=1610094) <br>
-- [Feature-Level Domain Adaptation (Kouw et al., 2016)](http://jmlr.org/papers/v17/15-206.html) <br>
 
 ## Contact:
 Questions, comments and bugs can be submitted in the issues tracker.

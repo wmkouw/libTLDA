@@ -95,7 +95,7 @@ switch p.Results.loss
 
     case {'lr', 'log', 'logistic'}
 
-        % Set up a one-vs-rest 
+        % Set up a one-vs-rest
         W = zeros(D,K);
         for k = 1:K
 
@@ -121,8 +121,8 @@ switch dist
     case {'blankout','dropout'}
 
         % Rate parameters
-        eta  = mean(X>0,1);
-        zeta = mean(Z>0,1);
+        eta  = mean(X > 0, 1);
+        zeta = mean(Z > 0, 1);
 
         % Ratio of rate parameters
         theta = max(0, 1 - zeta ./ eta);
