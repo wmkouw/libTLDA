@@ -24,8 +24,8 @@ class RobustBiasAwareClassifier(object):
     Methods contain training and prediction functions.
     """
 
-    def __init__(self, l2=1.0, order='first', gamma=1.0, tau=1e-5,
-                 max_iter=100, clip=1000):
+    def __init__(self, l2=0.0, order='first', gamma=1.0, tau=1e-5,
+                 max_iter=100, clip=1000, verbose=True):
         """
         Set classifier instance parameters.
 
@@ -36,6 +36,7 @@ class RobustBiasAwareClassifier(object):
                 (4) float 'tau': convergence threshold (def: 1e-5)
                 (5) int 'max_iter': maximum number of iterations (def: 100)
                 (6) int 'clip': upper bound on importance weights (def: 1000)
+                (7) boolean 'verbose': report training progress (def: True)
         OUTPUT  None
         """
         self.l2 = l2
@@ -53,6 +54,9 @@ class RobustBiasAwareClassifier(object):
 
         # Classifier parameters
         self.theta = 0
+
+        # Verbosity
+        self.verbose = verbose
 
     def feature_stats(self, X, y, order='first'):
         """
@@ -118,8 +122,11 @@ class RobustBiasAwareClassifier(object):
         """
         Compute psi function.
 
-        INPUT   (1)
-        OUTPUT  (1) array 'psi'
+        INPUT   (1) array 'X': data set (N samples by D features)
+                (2) array 'theta': classifier parameters (D features by 1)
+                (3) array 'w': importance-weights (N samples by 1)
+                (4) int 'K': number of classes (def: 2)
+        OUTPUT  (1) array 'psi' (N samples by K classes)
         """
         # Number of samples
         N = X.shape[0]
@@ -133,7 +140,7 @@ class RobustBiasAwareClassifier(object):
             Xk = self.feature_stats(X, k*np.ones((N, 1)))
 
             # Compute psi function
-            psi[:, k] = w*np.dot(Xk, theta)[:, 0]
+            psi[:, k] = (w*np.dot(Xk, theta))[:, 0]
 
         return psi
 
@@ -141,8 +148,10 @@ class RobustBiasAwareClassifier(object):
         """
         Class-posterior estimation.
 
-        INPUT   (1)
-        OUTPUT  (1)
+        INPUT   (1) array 'psi': weighted data-classifier output (N samples by
+                    K classes)
+        OUTPUT  (1) array 'pyx': class-posterior estimation (N samples by
+                    K classes)
         """
         # Data shape
         N, K = psi.shape
@@ -204,7 +213,7 @@ class RobustBiasAwareClassifier(object):
         theta = np.random.randn(1, D)*0.01
 
         # Start gradient descent
-        for t in range(self.max_iter):
+        for t in range(1, self.max_iter+1):
 
             # Calculate psi function
             psi = self.psi(X, theta.T, w, K=self.K)
@@ -212,10 +221,15 @@ class RobustBiasAwareClassifier(object):
             # Compute posterior
             pyx = self.posterior(psi)
 
-            # Compute product of estimated posterior and feature statistics
+            # Sum product of estimated posterior and feature stats
             pfs = 0
             for k in range(self.K):
-                pfs += (pyx[:, k].T * self.feature_stats(X, k*np.ones((N, 1))).T).T
+
+                # Compute feature statistics for k-th class
+                Xk = self.feature_stats(X, k*np.ones((N, 1)))
+
+                # Element-wise product with posterior and sum over classes
+                pfs += (pyx[:, k].T * Xk.T).T
 
             # Gradient computation and regularization
             dL = c - np.mean(pfs, axis=0) + self.l2*2*theta
@@ -227,13 +241,14 @@ class RobustBiasAwareClassifier(object):
             theta += dT
 
             # Report progress
-            if (t % self.max_iter / 10) == 1:
-                print('Iteration %4i/%4i - Norm gradient: %3.5f\n', t,
-                      self.max_iter, np.linalg.norm(dL))
+            if self.verbose:
+                if (t % (self.max_iter / 10)) == 1:
+                    print('Iteration {:03}/{:03} - Norm gradient: {:.12}'
+                          .format(t, self.max_iter, np.linalg.norm(dL)))
 
             # Check for convergence
             if (np.linalg.norm(dL) <= self.tau):
-                print('Broke at ' + str(t))
+                print('Broke at {}'.format(t))
                 break
 
         # Store resultant classifier parameters

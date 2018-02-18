@@ -103,7 +103,7 @@ elif aclfr == 'scl':
 
 elif aclfr == 'rba':
     # Robust bias-aware classifier
-    clf = RobustBiasAwareClassifier()
+    clf = RobustBiasAwareClassifier(l2=0.1, max_iter=1000)
 
 else:
     raise ValueError('Adaptive classifier not recognized.')
