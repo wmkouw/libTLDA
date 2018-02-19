@@ -1,5 +1,5 @@
 [![BuildStatus](https://travis-ci.org/wmkouw/libTLDA.svg?branch=master)](https://travis-ci.org/wmkouw/libTLDA)
-# LibTLDA: transfer learning and domain-adaptive classifiers
+# libTLDA: library of transfer learning and domain-adaptive classifiers
 
 This package contains the following classifiers: <br>
 - Importance-weighted classifier, with weight estimators:<br>

@@ -1,10 +1,10 @@
-import numpy as np
-import scipy.stats as st
-from numpy.linalg import svd
-
 """
 Set of utility functions necessary for different classifiers.
 """
+
+import numpy as np
+import scipy.stats as st
+from numpy.linalg import svd
 
 
 def is_pos_def(X):
