@@ -1,7 +1,7 @@
 [![BuildStatus](https://travis-ci.org/wmkouw/libTLDA.svg?branch=master)](https://travis-ci.org/wmkouw/libTLDA)
-# libTLDA: library of transfer learning and domain-adaptive classifiers
+## libTLDA: transfer learning and domain-adaptive classifiers
 
-This package contains the following classifiers: <br>
+This package contains the following classifiers:
 - Importance-weighted classifier, with weight estimators:<br>
 	- Kernel density estimation <br>
 	- [Ratio of Gaussians (Shimodaira, 2000)](https://www.sciencedirect.com/science/article/pii/S0378375800001154) <br>
@@ -14,8 +14,10 @@ This package contains the following classifiers: <br>
 - [Robust Bias-Aware (Liu & Ziebart, 2014)](https://papers.nips.cc/paper/5458-robust-classification-under-sample-selection-bias) <br>
 - [Feature-Level Domain Adaptation (Kouw et al., 2016)](http://jmlr.org/papers/v17/15-206.html) <br>
 
+Support is limited to linux and macOSX systems.
+
 ## Python
-Python-2.7 only, at the moment.
+Python versions 2.7, 3.4, 3.5 and 3.6.
 
 ### Installation
 First clone and enter the repository:

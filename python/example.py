@@ -25,7 +25,6 @@ import numpy as np
 import numpy.random as rnd
 import scipy.stats as st
 from sklearn.linear_model import LogisticRegression
-import matplotlib.pyplot as plt
 
 from iw import ImportanceWeightedClassifier
 from tca import TransferComponentClassifier
