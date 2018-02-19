@@ -1,5 +1,5 @@
 [![BuildStatus](https://travis-ci.org/wmkouw/libTLDA.svg?branch=master)](https://travis-ci.org/wmkouw/libTLDA)
-## libTLDA: transfer learning and domain-adaptive classifiers
+# libTLDA: transfer learning and domain-adaptive classifiers
 
 This package contains the following classifiers:
 - Importance-weighted classifier, with weight estimators:<br>
@@ -14,7 +14,7 @@ This package contains the following classifiers:
 - [Robust Bias-Aware (Liu & Ziebart, 2014)](https://papers.nips.cc/paper/5458-robust-classification-under-sample-selection-bias) <br>
 - [Feature-Level Domain Adaptation (Kouw et al., 2016)](http://jmlr.org/papers/v17/15-206.html) <br>
 
-Support is limited to linux and macOSX systems.
+Support is limited to linux and macOS systems.
 
 ## Python
 Python versions 2.7, 3.4, 3.5 and 3.6.
@@ -27,10 +27,9 @@ git clone https://github.com/wmkouw/libTLDA
 cd libTLDA/
 ```
 
-Creating a new conda environment takes care of all dependencies. <br>
-First, get conda (skip this step if you already have it):
+Conda environments take care of all dependencies. If you don't have conda installed already, you can set it up through:
 ```
-wget http://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O ~/miniconda.sh
+wget http://repo.continuum.io/miniconda/Miniconda2-latest-$(uname)-x86_64.sh -O ~/miniconda.sh
 bash ~/miniconda.sh -b -p $HOME/miniconda
 export PATH="$HOME/miniconda/bin:$PATH"
 ```
@@ -40,20 +39,20 @@ conda env create -f environment.yml
 source activate libtlda
 ```
 
-Afterwards, enter python directory and run the following setup script:
+Afterwards, the package can be installed by running:
 ```
-cd python/
 python setup.py install
 ```
 
 ### Usage
-Example script - can be edited to test different classifiers:
+The script in `example.py` shows a simple example of importing one of the adaptive classifiers and applying them to your data set.
 ```
+cd python/
 python example.py
 ```
 
-### Python-specific classifiers
-- dann: Domain-Adversarial Neural Network (Ganin et al., 2015) (TODO)
+<!-- ### Python-specific classifiers
+- dann: Domain-Adversarial Neural Network (Ganin et al., 2015) (TODO) -->
 
 ## Matlab
 Version: 9.2.0.556344 (R2017a) <br>
@@ -66,13 +65,13 @@ git clone https://github.com/wmkouw/libTLDA
 cd libTLDA/matlab/
 ```
 
-In the matlab command window, call the installation script. It downloads all dependencies ([minFunc](https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html), [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvm/)) and adds them - along with libTLDA - to your path (matlab command window):
+In the matlab command window, call the installation script. It downloads all dependencies ([minFunc](https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html), [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvm/)) and adds them - along with libTLDA - to your path:
 ```
 install.m
 ```
 
 ### Usage
-In matlab, call the example script (can be edited to test different classifiers):
+There is an example script that can be edited to test the different classifiers:
 ```
 example.m
 ```
