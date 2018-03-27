@@ -80,4 +80,4 @@ example.m
 - Geodesic Flow Kernel [(Gong et al., 2012)](https://dl.acm.org/citation.cfm?id=1610094) <br>
 
 ## Contact:
-Questions, comments and bugs can be submitted in the issues tracker.
+Questions, comments and bugs can be submitted in the [issues tracker](https://github.com/wmkouw/libTLDA/issues).
