@@ -1,6 +1,6 @@
 ## libTLDA: library of transfer learning and domain adaptation classifiers.
 
-[![BuildStatus](https://travis-ci.org/wmkouw/libTLDA.svg?branch=master)](https://travis-ci.org/wmkouw/libTLDA) [![PyPI version](https://badge.fury.io/py/libtlda.svg)](https://badge.fury.io/py/libtlda)![Python version](https://img.shields.io/badge/python-2.7%2C%203.4%2C%203.5%2C%203.6-blue.svg)
+[![BuildStatus](https://travis-ci.org/wmkouw/libTLDA.svg?branch=master)](https://travis-ci.org/wmkouw/libTLDA) [![PyPI version](https://badge.fury.io/py/libtlda.svg)](https://badge.fury.io/py/libtlda) ![Python version](https://img.shields.io/badge/python-2.7%2C%203.4%2C%203.5%2C%203.6-blue.svg) ![Matlab version](https://img.shields.io/badge/matlab-R2017a-blue.svg)
 
 This package contains the following classifiers:
 - Importance-weighted classifier, with weight estimators:<br>
@@ -22,7 +22,7 @@ This package contains the following classifiers:
 
 #### Installation
 Installation can be done through pip:
-```
+```shell
 pip install libtlda
 ```
 
@@ -43,7 +43,7 @@ from libtlda.rba import RobustBiasAwareClassifier
 from libtlda.flda import FeatureLevelDomainAdaptiveClassifier
 ```
 From there on, training is a matter of calling the fit method on your labeled source dataset `(X,y)` and unlabeled target dataset `Z`. For example:
-```
+```python
 parameters = ImportanceWeightedClassifier().fit(X, y, Z)
 ```
 
@@ -53,7 +53,6 @@ Documentation will be improved soon. For now, have a look at the `example.py` sc
 - dann: Domain-Adversarial Neural Network (Ganin et al., 2015) (TODO) -->
 
 ### Matlab
-Version: 9.2.0.556344 (R2017a) <br>
 
 #### Installation:
 First clone the repository and change directory to matlab:
@@ -63,13 +62,13 @@ cd libTLDA/matlab/
 ```
 
 In the matlab command window, call the installation script. It downloads all dependencies ([minFunc](https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html), [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvm/)) and adds them - along with `libtlda` - to your path:
-```
+```MATLAB
 install.m
 ```
 
 #### Usage
 There is an example script that can be edited to test the different classifiers:
-```
+```MATLAB
 example.m
 ```
 
