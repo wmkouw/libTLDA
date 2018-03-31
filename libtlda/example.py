@@ -1,5 +1,5 @@
 """
-libTLDA Example script to show how to run an adaptive classifier
+libTLDA Example script to show how to run an adaptive classifier.
 
 Generate synthetic data sets with either normal distributions or Poisson
 distributions (for scl and flda)
@@ -110,7 +110,7 @@ elif aclfr == 'flda':
     clf = FeatureLevelDomainAdaptiveClassifier(l2=0.1, max_iter=1000)
 
 else:
-    raise ValueError('Adaptive classifier not recognized.')
+    raise ValueError('Classifier not recognized.')
 
 # Train classifier
 clf.fit(X, y, Z)

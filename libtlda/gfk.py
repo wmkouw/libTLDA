@@ -2,56 +2,56 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import numpy.linalg.lapack as lap
 import scipy.stats as st
 from scipy.sparse.linalg import eigs
 from scipy.spatial.distance import cdist
 import sklearn as sk
-from sklearn.decomposition import PCA
 from sklearn.svm import LinearSVC
+from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import cross_val_predict
 from os.path import basename
 
-from util import is_pos_def
+from .util import is_pos_def, nullspace
 
 
-class SubspaceAlignedClassifier(object):
+class GeodesicFlowClassifier(object):
     """
-    Class of classifiers based on Subspace Alignment.
+    Class of classifiers based on Geodesic Flow Kernel.
 
-    Methods contain the alignment itself, classifiers and general utilities.
+    Methods contain flow kernel computation, training and general utilities.
     """
 
-    def __init__(self, loss='logistic', l2=1.0, num_components=1):
+    def __init__(self, loss='logistic', l2=1.0, num_neighbours=1):
         """
-        Select a particular type of subspace aligned classifier.
+        Select a particular type of geodesic flow classifier.
 
         INPUT   (1) str 'loss': loss function for weighted classifier, options:
                     'logistic', 'quadratic', 'hinge' (def: 'logistic')
                 (2) float 'l2': l2-regularization parameter value (def:0.01)
-                (3) int 'num_components': number of transfer components to
-                    maintain (def: 1)
+                (3) int 'num_neighbours': number of neighbours for knn (def: 1)
         """
         self.loss = loss
         self.l2 = l2
-        self.num_components = num_components
 
         # Initialize untrained classifiers
         if self.loss == 'logistic':
             # Logistic regression model
-            self.clf = LogisticRegression()
+            self.clf = LogisticRegression(C=l2)
         elif self.loss == 'quadratic':
             # Least-squares model
-            self.clf = LinearRegression()
+            self.clf = LinearRegression(C=l2)
         elif self.loss == 'hinge':
             # Linear support vector machine
-            self.clf = LinearSVC()
+            self.clf = LinearSVC(C=l2)
+        elif self.loss = 'knn':
+            # k-nearest neighbours
+            self.clf = KNeighborsClassifier(n_neighbors=num_neighbours)
         else:
             # Other loss functions are not implemented
             raise NotImplementedError
-
-        # Maintain target principal component coefficients
-        self.CZ = ''
 
         # Whether model has been trained
         self.is_trained = False
@@ -59,16 +59,17 @@ class SubspaceAlignedClassifier(object):
         # Dimensionality of training data
         self.train_data_dim = ''
 
-    def subspace_alignment(self, X, Z, num_components=1):
+    def geodesic_flow_kernel(self, X, Z, subspace_dim=1):
         """
-        Compute subspace and alignment matrix.
+        Compute kernel for given data set.
 
-        INPUT   (1) array 'X': source data set (N samples by D features)
-                (2) array 'Z': target data set (M samples by D features)
-                (3) int 'num_components': number of components (def: 1)
-        OUTPUT  (1) array 'V': transformation matrix (D features by D features)
-                (2) array 'CX': source principal component coefficients
-                (3) array 'CZ': target principal component coefficients
+        Reference: Geodesic Flow Kernel for Unsupervised Domain Adaptation.
+        Gong, et al. (2008). CVPR
+
+        INPUT   (1) array 'X': data set (N samples by D features)
+                (2) array 'Z': data set (M samples by D features)
+                (5) int 'subspace_dim': dimensionality of the subspace (def: 1)
+        OUTPUT  (1) array: kernel matrix (N+M by N+M)
         """
         # Data shapes
         N, DX = X.shape
@@ -77,15 +78,42 @@ class SubspaceAlignedClassifier(object):
         # Assert equivalent dimensionalities
         assert DX == DZ
 
-        # Compute principal components
-        CX = PCA(n_components=num_components, whiten=True).fit(X).components_.T
-        CZ = PCA(n_components=num_components, whiten=True).fit(Z).components_.T
+        # Find principal components
+        CX = PCA(n_components=DX, whiten=True).fit(X).components_.T
+        CZ = PCA(n_components=subspace_dim, whiten=True).fit(Z).components_.T
 
-        # Aligned source components
-        V = np.dot(CX.T, CZ)
+        # Compute component product
+        CC = np.dot(CX.T, CZ)
 
-        # Return transformation matrix and principal component coefficients
-        return V, CX, CZ
+        '''
+        #TODO: Generalized singular value decomposition
+        #U,S,Vt,info = lap.dgesvd(CC[:subspace_dim,:], CC[subspace_dim:, :])
+        #[U,V,~,Gamma,~] = gsvd(QPZ(1:d,:), QPZ(d+1:end,:));
+
+        # Find principal angles
+        theta = real(acos(diag(Gamma)))
+
+        # Ensure non-zero angles for computational stability
+        theta = max(theta, 1e-20)
+
+        # Filler zero matrices
+        A1 = np.zeros(subspace_dim, D - subspace_dim)
+        A2 = np.zeros(subspacec_dim, D - 2*subspace_dim)
+        A3 = np.zeros(D, D - 2*subspace_dim)
+
+        # Angle matrices
+        L1 = 0.5.*diag(1 + sin(2*theta)./ (2.*theta));
+        L2 = 0.5.*diag((-1 + cos(2*theta))./ (2.*theta));
+        L3 = 0.5.*diag(1 - sin(2*theta)./ (2.*theta));
+
+        # Constituent matrices
+        C1 = [U, A1; A1', -V]
+        C2 = [L1, L2, A2; L2, L3, A2; A3']
+        C3 = [U, A1; A1', -V]'
+
+        # Geodesic flow kernel
+        G = Q * C1 * C2 * C3 * Q'
+        '''
 
     def fit(self, X, y, Z):
         """
@@ -94,7 +122,7 @@ class SubspaceAlignedClassifier(object):
         INPUT   (1) array 'X': source data (N samples by D features)
                 (2) array 'y': source labels (N samples by 1)
                 (3) array 'Z': target data (M samples by D features)
-        OUTPUT  None
+        OUTPUT
         """
         # Data shapes
         N, DX = X.shape
@@ -103,15 +131,14 @@ class SubspaceAlignedClassifier(object):
         # Assert equivalent dimensionalities
         assert DX == DZ
 
-        # Transfer component analysis (store target subspace)
-        V, CX, self.CZ = self.subspace_alignment(X, Z, num_components=self.
-                                                 num_components)
+        # Assert correct number of components for given dataset
+        assert self.num_components <= N + M - 1
 
-        # Map source data onto source principal components
-        X = np.dot(X, CX)
+        # Maintain source and target data for later kernel computations
+        self.XZ = np.concatenate((X, Z), axis=0)
 
-        # Align source data to target subspace
-        X = np.dot(X, V)
+        # Compute geodesic flow kernel
+        G = self.geodesic_flow_kernel(X, Z)
 
         # Train a weighted classifier
         if self.loss == 'logistic':
@@ -123,6 +150,11 @@ class SubspaceAlignedClassifier(object):
         elif self.loss == 'hinge':
             # Linear support vector machine with sample weights
             self.clf.fit(X, y)
+        elif self.loss == 'knn':
+            # k-nearest-neighbour classifier
+            self.clf = KNeighborsClassifier(metric='Mahalanobis',
+                                            metric_params=G)
+            self.clf.fit(X, y)
         else:
             # Other loss functions are not implemented
             raise NotImplementedError
@@ -133,13 +165,12 @@ class SubspaceAlignedClassifier(object):
         # Store training data dimensionality
         self.train_data_dim = DX
 
-    def predict(self, Z_, whiten=False):
+    def predict(self, Z_):
         """
         Make predictions on new dataset.
 
         INPUT   (1) array 'Z_': new data set (M samples by D features)
-                (2) boolean 'whiten': whether to whiten new data (def: false)
-        OUTPUT  (1) array 'preds': label predictions (M samples by 1)
+        OUTPUT  (2) array 'preds': label predictions (M samples by 1)
         """
         # Data shape
         M, D = Z_.shape
@@ -148,12 +179,11 @@ class SubspaceAlignedClassifier(object):
         if self.is_trained:
             assert self.train_data_dim == D
 
-        # Check for need to whiten data beforehand
-        if whiten:
-            Z_ = st.zscore(Z_)
+        # Compute kernel for new data
+        K = self.kernel(Z_, self.XZ, type=self.kernel_type,
+                        bandwidth=self.bandwidth, order=self.order)
 
-        # Map new target data onto target subspace
-        Z_ = np.dot(Z_, self.CZ)
+        '''GFK'''
 
         # Call scikit's predict function
         preds = self.clf.predict(Z_)

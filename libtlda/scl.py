@@ -11,7 +11,7 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.model_selection import cross_val_predict
 from os.path import basename
 
-from util import is_pos_def
+from .util import is_pos_def
 
 
 class StructuralCorrespondenceClassifier(object):

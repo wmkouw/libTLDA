@@ -11,7 +11,7 @@ from sklearn.model_selection import cross_val_predict
 from os.path import basename
 from cvxopt import matrix, solvers
 
-from util import is_pos_def
+from .util import is_pos_def
 
 
 class ImportanceWeightedClassifier(object):

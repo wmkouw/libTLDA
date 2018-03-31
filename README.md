@@ -14,8 +14,6 @@ This package contains the following classifiers:
 - Robust Bias-Aware [(Liu & Ziebart, 2014)](https://papers.nips.cc/paper/5458-robust-classification-under-sample-selection-bias) <br>
 - Feature-Level Domain Adaptation [(Kouw et al., 2016)](http://jmlr.org/papers/v17/15-206.html) <br>
 
-Support is limited to linux and macOS systems.
-
 ## Python
 Python versions 2.7, 3.4, 3.5 and 3.6.
 

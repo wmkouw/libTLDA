@@ -11,7 +11,7 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.model_selection import cross_val_predict
 from os.path import basename
 
-from util import is_pos_def
+from .util import is_pos_def
 
 
 class TransferComponentClassifier(object):
@@ -46,7 +46,6 @@ class TransferComponentClassifier(object):
         self.kernel_type = kernel_type
         self.bandwidth = bandwidth
         self.order = order
-
 
         # Initialize untrained classifiers
         if self.loss == 'logistic':

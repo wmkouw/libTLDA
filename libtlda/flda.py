@@ -12,7 +12,7 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.model_selection import cross_val_predict
 from os.path import basename
 
-from util import is_pos_def, one_not
+from .util import is_pos_def, one_not
 
 
 class FeatureLevelDomainAdaptiveClassifier(object):
@@ -287,10 +287,12 @@ class FeatureLevelDomainAdaptiveClassifier(object):
             for k in range(K):
 
                 # Shorthand for loss computation
-                def L(theta): return self.flda_log_loss(theta, X, Y[:, k], E, V, l2=self.l2)
+                def L(theta): return self.flda_log_loss(theta, X, Y[:, k],
+                                                        E, V, l2=self.l2)
 
                 # Shorthand for gradient computation
-                def J(theta): return self.flda_log_grad(theta, X, Y[:, k], E, V, l2=self.l2)
+                def J(theta): return self.flda_log_grad(theta, X, Y[:, k],
+                                                        E, V, l2=self.l2)
 
                 # Call scipy's minimizer
                 results = minimize(L, theta[:, k], jac=J, method='BFGS',
