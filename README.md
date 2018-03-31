@@ -1,5 +1,6 @@
-[![BuildStatus](https://travis-ci.org/wmkouw/libTLDA.svg?branch=master)](https://travis-ci.org/wmkouw/libTLDA)
 ## libTLDA: library of transfer learning and domain adaptation classifiers.
+
+[![BuildStatus](https://travis-ci.org/wmkouw/libTLDA.svg?branch=master)](https://travis-ci.org/wmkouw/libTLDA) [![PyPI version](https://badge.fury.io/py/libtlda.svg)](https://badge.fury.io/py/libtlda)[![Python version](https://img.shields.io/badge/python-2.7%2C%203.4%2C%203.5%2C%203.6-blue.svg)
 
 This package contains the following classifiers:
 - Importance-weighted classifier, with weight estimators:<br>

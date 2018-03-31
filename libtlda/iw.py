@@ -315,7 +315,7 @@ class ImportanceWeightedClassifier(object):
         OUTPUT  (2) array 'preds': label predictions (M samples by 1)
         """
         # Data shape
-        M, D = X_.shape
+        M, D = Z_.shape
 
         # If classifier is trained, check for same dimensionality
         if self.is_trained:
