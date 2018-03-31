@@ -45,7 +45,7 @@ install:
 
 # command to run tests, e.g. python setup.py test
 script:
-  - python setup.py install
-  - cd python
+  - pip install .
+  - cd libtlda
   - python example.py
 #  - coverage run --source=python -m pytest

@@ -12,7 +12,6 @@ u = M samples by 1 vector of labels in {1,...,K} for target domain
 Options for adaptive classifiers:
 iw        importance-weighting
 suba      subspace alignment
-gfk       geodesic flow kernel
 tca       transfer component analysis
 rba       robust bias-aware
 scl       structural correspondence learning
@@ -26,16 +25,16 @@ import numpy.random as rnd
 import scipy.stats as st
 from sklearn.linear_model import LogisticRegression
 
-from iw import ImportanceWeightedClassifier
-from tca import TransferComponentClassifier
-from suba import SubspaceAlignedClassifier
-from scl import StructuralCorrespondenceClassifier
-from rba import RobustBiasAwareClassifier
-from flda import FeatureLevelDomainAdaptiveClassifier
+from libtlda.iw import ImportanceWeightedClassifier
+from libtlda.tca import TransferComponentClassifier
+from libtlda.suba import SubspaceAlignedClassifier
+from libtlda.scl import StructuralCorrespondenceClassifier
+from libtlda.rba import RobustBiasAwareClassifier
+from libtlda.flda import FeatureLevelDomainAdaptiveClassifier
 
 """Select adaptive classifier"""
 
-aclfr = 'flda'
+aclfr = 'iw'
 viz = False
 
 """Generate synthetic data set"""
@@ -85,7 +84,7 @@ pred_n = lr.predict(Z)
 if aclfr == 'iw':
 
     # Call an importance-weighted classifier
-    clf = ImportanceWeightedClassifier(iwe='kde', loss='logistic')
+    clf = ImportanceWeightedClassifier(iwe='lr', loss='logistic')
 
 elif aclfr == 'tca':
 

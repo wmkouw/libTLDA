@@ -14,68 +14,63 @@ This package contains the following classifiers:
 - Robust Bias-Aware [(Liu & Ziebart, 2014)](https://papers.nips.cc/paper/5458-robust-classification-under-sample-selection-bias) <br>
 - Feature-Level Domain Adaptation [(Kouw et al., 2016)](http://jmlr.org/papers/v17/15-206.html) <br>
 
-## Python
-Python versions 2.7, 3.4, 3.5 and 3.6.
+### Python
 
-### Installation
-First clone and enter the repository:
+#### Installation
+Installation can be done through pip:
 ```
-sudo apt-get install git
-git clone https://github.com/wmkouw/libTLDA
-cd libTLDA/
+pip install libtlda
 ```
 
-Conda environments take care of all dependencies. If you don't have conda installed already, you can set it up through:
-```
-wget http://repo.continuum.io/miniconda/Miniconda2-latest-$(uname)-x86_64.sh -O ~/miniconda.sh
-bash ~/miniconda.sh -b -p $HOME/miniconda
-export PATH="$HOME/miniconda/bin:$PATH"
-```
-Then, create and activate a new environment:
+Environment management is generally a good idea. To create a [conda](https://conda.io/docs/) environment, run the following commands:
 ```
 conda env create -f environment.yml
 source activate libtlda
 ```
 
-Afterwards, the package can be installed by running the following setup script:
+#### Usage
+Libtlda follows a similar logic as [scikit-learn](http://scikit-learn.org/_). Each type of adaptive classifier is a submodule, from which the classifiers can be imported:
+```python
+from libtlda.iw import ImportanceWeightedClassifier
+from libtlda.tca import TransferComponentClassifier
+from libtlda.suba import SubspaceAlignedClassifier
+from libtlda.scl import StructuralCorrespondenceClassifier
+from libtlda.rba import RobustBiasAwareClassifier
+from libtlda.flda import FeatureLevelDomainAdaptiveClassifier
 ```
-python setup.py install
+From there on, training is a matter of calling the fit method on your labeled source dataset `(X,y)` and unlabeled target dataset `Z`. For example:
+```
+parameters = ImportanceWeightedClassifier().fit(X, y, Z)
 ```
 
-### Usage
-The script in `example.py` shows a simple example of importing one of the adaptive classifiers and applying them to your data set.
-```
-cd python/
-python example.py
-```
+Documentation will be improved soon. For now, have a look at the `example.py` script. It shows a couple of options for training adaptive classifiers.
 
 <!-- ### Python-specific classifiers
 - dann: Domain-Adversarial Neural Network (Ganin et al., 2015) (TODO) -->
 
-## Matlab
+### Matlab
 Version: 9.2.0.556344 (R2017a) <br>
 
-### Installation:
+#### Installation:
 First clone the repository and change directory to matlab:
-```
-sudo apt-get install git
+```shell
 git clone https://github.com/wmkouw/libTLDA
 cd libTLDA/matlab/
 ```
 
-In the matlab command window, call the installation script. It downloads all dependencies ([minFunc](https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html), [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvm/)) and adds them - along with libTLDA - to your path:
+In the matlab command window, call the installation script. It downloads all dependencies ([minFunc](https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html), [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvm/)) and adds them - along with `libtlda` - to your path:
 ```
 install.m
 ```
 
-### Usage
+#### Usage
 There is an example script that can be edited to test the different classifiers:
 ```
 example.m
 ```
 
-### Matlab-specific classifiers:
+#### Matlab-specific classifiers:
 - Geodesic Flow Kernel [(Gong et al., 2012)](https://dl.acm.org/citation.cfm?id=1610094) <br>
 
-## Contact:
+### Contact:
 Questions, comments and bugs can be submitted in the [issues tracker](https://github.com/wmkouw/libTLDA/issues).
