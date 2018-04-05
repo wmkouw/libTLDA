@@ -12,7 +12,7 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.model_selection import cross_val_predict
 from os.path import basename
 
-from .util import is_pos_def, one_not
+from .util import is_pos_def, one_hot
 
 
 class FeatureLevelDomainAdaptiveClassifier(object):
@@ -268,8 +268,8 @@ class FeatureLevelDomainAdaptiveClassifier(object):
         # Number of classes
         K = len(np.unique(y))
 
-        # Map to one-not-encoding (label vector to label array)
-        Y = one_not(y)
+        # Map to one-not-encoding
+        Y = one_hot(y, one_not=True)
 
         # Compute transfer distribution parameters
         iota = self.mle_transfer_dist(X, Z)

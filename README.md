@@ -15,6 +15,9 @@ This package contains the following classifiers:
 - Robust Bias-Aware [(Liu & Ziebart, 2014)](https://papers.nips.cc/paper/5458-robust-classification-under-sample-selection-bias) <br>
 - Feature-Level Domain Adaptation [(Kouw et al., 2016)](http://jmlr.org/papers/v17/15-206.html) <br>
 
+#### Python-specific classifiers:
+- Target Contrastive Pessimistic Risk [(Kouw et al., 2017)](https://arxiv.org/abs/1706.08082)
+
 #### Matlab-specific classifiers:
 - Geodesic Flow Kernel [(Gong et al., 2012)](https://dl.acm.org/citation.cfm?id=1610094)
 
@@ -33,7 +36,7 @@ source activate libtlda
 ```
 
 #### Usage
-Libtlda follows a similar logic as [scikit-learn](http://scikit-learn.org/_). Each type of adaptive classifier is a submodule, from which the classifiers can be imported:
+Libtlda follows a similar logic as [scikit-learn](http://scikit-learn.org/). Each type of adaptive classifier is a submodule, from which the classifiers can be imported:
 ```python
 from libtlda.iw import ImportanceWeightedClassifier
 from libtlda.tca import TransferComponentClassifier
@@ -41,6 +44,7 @@ from libtlda.suba import SubspaceAlignedClassifier
 from libtlda.scl import StructuralCorrespondenceClassifier
 from libtlda.rba import RobustBiasAwareClassifier
 from libtlda.flda import FeatureLevelDomainAdaptiveClassifier
+from libtlda.tcpr import TargetContrastivePessimisticClassifier
 ```
 From there on, training is a matter of calling the fit method on your labeled source dataset `(X,y)` and unlabeled target dataset `Z`. For example:
 ```python
