@@ -1,6 +1,6 @@
 ## libTLDA: library of transfer learning and domain adaptation classifiers.
 
-[![BuildStatus](https://travis-ci.org/wmkouw/libTLDA.svg?branch=master)](https://travis-ci.org/wmkouw/libTLDA) [![PyPI version](https://badge.fury.io/py/libtlda.svg)](https://badge.fury.io/py/libtlda) ![Python version](https://img.shields.io/badge/python-2.7%2C%203.4%2C%203.5%2C%203.6-blue.svg) ![Matlab version](https://img.shields.io/badge/matlab-R2017a-blue.svg)
+[![BuildStatus](https://travis-ci.org/wmkouw/libTLDA.svg?branch=master)](https://travis-ci.org/wmkouw/libTLDA) [![PyPI version](https://badge.fury.io/py/libtlda.svg)](https://badge.fury.io/py/libtlda) ![Python version](https://img.shields.io/badge/python-2.7%2C%203.4%2C%203.5%2C%203.6-blue.svg) ![Matlab version](https://img.shields.io/badge/matlab-R2017a-blue.svg) [![DOI](https://zenodo.org/badge/41360294.svg)](https://zenodo.org/badge/latestdoi/41360294)
 
 This package contains the following classifiers:
 - Importance-weighted classifier, with weight estimators:<br>
