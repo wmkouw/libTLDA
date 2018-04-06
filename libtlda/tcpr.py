@@ -54,7 +54,7 @@ class TargetContrastivePessimisticClassifier(object):
             # Set to short name
             self.loss = 'lda'
 
-        elif self.loss in ['quadratic discriminant analysis', 'lda']:
+        elif self.loss in ['quadratic discriminant analysis', 'qda']:
 
             # Set to short name
             self.loss = 'qda'

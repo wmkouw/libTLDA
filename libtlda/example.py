@@ -1,5 +1,4 @@
 """
-libTLDA
 Example script to show how to run an adaptive classifier.
 
 Generate synthetic data sets with either normal distributions or Poisson

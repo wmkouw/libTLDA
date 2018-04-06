@@ -1,6 +1,7 @@
 *.asv
 *.pyc
-__pycache__
+*.sh
+*__pycache__*
 /build/
 /dist/
 /*.egg-info
