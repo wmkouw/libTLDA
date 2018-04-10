@@ -46,9 +46,14 @@ from libtlda.rba import RobustBiasAwareClassifier
 from libtlda.flda import FeatureLevelDomainAdaptiveClassifier
 from libtlda.tcpr import TargetContrastivePessimisticClassifier
 ```
-From there on, training is a matter of calling the fit method on your labeled source dataset `(X,y)` and unlabeled target dataset `Z`. For example:
+From there on, training is a matter of calling the `fit` method on your labeled source dataset `(X,y)` and unlabeled target dataset `Z`. For example:
 ```python
-parameters = ImportanceWeightedClassifier().fit(X, y, Z)
+classifier = ImportanceWeightedClassifier().fit(X, y, Z)
+```
+
+Predictions can be made by calling the `predict` method:
+```python
+y_pred = classifier.predict(Z)
 ```
 
 Documentation will be improved soon. For now, have a look at the `example.py` script. It shows a couple of options for training adaptive classifiers.
