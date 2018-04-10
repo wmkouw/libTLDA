@@ -490,10 +490,17 @@ class TargetContrastivePessimisticClassifier(object):
         # Return predictions array
         return preds
 
+    def get_params(self):
+        """Return classifier parameters."""
+        # Check if classifier is trained
+        if self.is_trained:
+            return self.parameters
+
+        else:
+            # Throw soft error
+            print('Classifier is not trained yet.')
+            return []
+
     def error_rate(self, preds, u_):
         """Compute classification error rate."""
         return np.mean(preds != u_, axis=0)
-
-    def is_trained(self):
-        """Check whether classifier is trained."""
-        return self.is_trained
