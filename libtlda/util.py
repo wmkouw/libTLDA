@@ -7,6 +7,9 @@ Contains algebraic operations, label encodings and visualizations.
 import numpy as np
 import numpy.linalg as al
 import scipy.stats as st
+
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 
