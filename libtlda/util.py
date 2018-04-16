@@ -204,7 +204,7 @@ def plotlda(parameters, ax=[], colors='k', gridsize=(101, 101)):
     xy = np.stack((x, y), axis=2)
 
     # Generate pdf's
-    z = np.zeros((*gridsize, K))
+    z = np.zeros((gridsize[0], gridsize[1], K))
     for k in range(K):
         z[:, :, k] = st.multivariate_normal(mean=mu[k, :], cov=Si).pdf(xy)
 
