@@ -25,7 +25,7 @@ before_install:
     fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       MINCONDA_OS=$MINCONDA_LINUX;
-      apt-get update;
+      sudo apt-get update;
     elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       MINCONDA_OS=$MINCONDA_OSX;
       brew update;
@@ -35,10 +35,8 @@ before_install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda config --set always_yes yes
   - conda update -q conda
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       conda install python.app;
-    else
-      conda install python3.app;
     fi  
   - conda create -q -n test-environment python=$PYTHON_VERSION pip numpy matplotlib
   - source activate test-environment
