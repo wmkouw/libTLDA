@@ -1,5 +1,5 @@
 from distutils.core import setup
-from setuptools import find_packages
+from setuptools import setup, find_packages
 from os.path import join, dirname
 
 
@@ -19,7 +19,8 @@ setup(
     description=("Library of transfer learning and domain adaptation \
                   classifiers."),
     long_description=open('README.md').read(),
-    keywords='machine learning somain adaptation transfer learning',
+    long_description_content_type="text/markdown",
+    keywords='machine learning, domain adaptation, transfer learning',
     packages=find_packages(),
     install_requires=required,
     url="https://github.com/wmkouw/libTLDA",

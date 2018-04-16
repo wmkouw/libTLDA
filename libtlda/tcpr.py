@@ -265,7 +265,7 @@ class TargetContrastivePessimisticClassifier(object):
         # Check labels
         K = Y.shape[1]
         assert K > 1
-        assert not np.any(np.sum(Y, axis=0) == 0)
+        assert np.all(np.sum(Y, axis=0) > 0)
 
         # Data shape
         N, D = X.shape
