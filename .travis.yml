@@ -50,7 +50,6 @@ install:
 
 script:
   - "coverage run --source=libtlda -m pytest"
-  # - python libtlda/demos/example.py
 
 after_script:
   - "pip install scrutinizer-ocular"

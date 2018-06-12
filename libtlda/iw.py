@@ -27,21 +27,37 @@ class ImportanceWeightedClassifier(object):
         """
         Select a particular type of importance-weighted classifier.
 
-        INPUT   (1) str 'loss': loss function for weighted classifier, options:
-                    'logistic', 'quadratic', 'hinge' (def: 'logistic')
-                (2) float 'l2': l2-regularization parameter value (def:0.01)
-                (3) str 'iwe': importance weight estimator, options: 'lr',
-                    'nn', 'rg', 'kmm', 'kde' (def: 'lr')
-                (4) boolean 'smoothing': whether to apply Laplace smoothing to
-                    the nearest-neighbour importance-weight estimator
-                    (def: True)
-                (5) float 'clip': maximum allowable importance-weight value; if
-                    set to -1, then the weights are not clipped (def:-1)
-                (6) str 'kernel_type': what type of kernel to use for kernel
-                    density estimation or kernel mean matching, options:
-                    'diste', 'rbf' (def: 'rbf')
-                (7) float 'bandwidth': kernel bandwidth parameter value for
-                    kernel-based weight estimators (def: 1)
+        Parameters
+        ----------
+        loss : str
+            loss function for weighted classifier, options: 'logistic',
+            'quadratic', 'hinge' (def: 'logistic')
+        l2 : float
+            l2-regularization parameter value (def:0.01)
+        iwe : str
+            importance weight estimator, options: 'lr', 'nn', 'rg', 'kmm',
+            'kde' (def: 'lr')
+        smoothing : bool
+            whether to apply Laplace smoothing to the nearest-neighbour
+            importance-weight estimator (def: True)
+        clip : float
+            maximum allowable importance-weight value; if set to -1, then the
+            weights are not clipped (def:-1)
+        kernel_type : str
+            what type of kernel to use for kernel density estimation or kernel
+            mean matching, options: 'diste', 'rbf' (def: 'rbf')
+        bandwidth : float
+            kernel bandwidth parameter value for kernel-based weight
+            estimators (def: 1)
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>>> clf = ImportanceWeightedClassifier()
+
         """
         self.loss = loss
         self.l2 = l2
@@ -75,9 +91,25 @@ class ImportanceWeightedClassifier(object):
         """
         Estimate importance weights based on a ratio of Gaussian distributions.
 
-        INPUT   (1) array 'X': source data (N samples by D features)
-                (2) array 'Z': target data (M samples by D features)
-        OUTPUT  (1) array: importance weights (N samples by 1)
+        Parameters
+        ----------
+        X : array
+            source data (N samples by D features)
+        Z : array
+            target data (M samples by D features)
+
+        Returns
+        -------
+        iw : array
+            importance weights (N samples by 1)
+
+        Examples
+        --------
+        X = np.random.randn(10, 2)
+        Z = np.random.randn(10, 2)
+        clf = ImportanceWeightedClassifier()
+        iw = clf.iwe_ratio_gaussians(X, Z)
+
         """
         # Data shapes
         N, DX = X.shape
