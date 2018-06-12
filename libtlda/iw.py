@@ -63,7 +63,7 @@ class ImportanceWeightedClassifier(object):
             self.clf = LinearSVC()
         else:
             # Other loss functions are not implemented
-            raise NotImplementedError
+            raise NotImplementedError('Loss function not implemented.')
 
         # Whether model has been trained
         self.is_trained = False
@@ -84,7 +84,8 @@ class ImportanceWeightedClassifier(object):
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Sample means in each domain
         mu_X = np.mean(X, axis=0)
@@ -113,9 +114,11 @@ class ImportanceWeightedClassifier(object):
         pT = st.multivariate_normal.pdf(X, mu_Z, Si_Z)
         pS = st.multivariate_normal.pdf(X, mu_X, Si_X)
 
-        # Check for numerics
-        assert not np.any(np.isnan(pT)) or np.any(pT == 0)
-        assert not np.any(np.isnan(pS)) or np.any(pS == 0)
+        # Check for numerical problems
+        if np.any(np.isnan(pT)) or np.any(pT == 0):
+            raise ValueError('Source probabilities are NaN or 0.')
+        if np.any(np.isnan(pS)) or np.any(pS == 0):
+            raise ValueError('Target probabilities are NaN or 0.')
 
         # Return the ratio of probabilities
         return pT / pS
@@ -133,15 +136,18 @@ class ImportanceWeightedClassifier(object):
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Compute probabilities based on source kernel densities
         pT = st.gaussian_kde(Z.T).pdf(X.T)
         pS = st.gaussian_kde(X.T).pdf(X.T)
 
-        # Check for numerics
-        assert not np.any(np.isnan(pT)) or np.any(pT == 0)
-        assert not np.any(np.isnan(pS)) or np.any(pS == 0)
+        # Check for numerical problems
+        if np.any(np.isnan(pT)) or np.any(pT == 0):
+            raise ValueError('Source probabilities are NaN or 0.')
+        if np.any(np.isnan(pS)) or np.any(pS == 0):
+            raise ValueError('Target probabilities are NaN or 0.')
 
         # Return the ratio of probabilities
         return pT / pS
@@ -159,7 +165,8 @@ class ImportanceWeightedClassifier(object):
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Make domain-label variable
         y = np.concatenate((np.zeros((N, 1)),
@@ -190,7 +197,8 @@ class ImportanceWeightedClassifier(object):
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Compute Euclidean distance between samples
         d = cdist(X, Z, metric='euclidean')
@@ -223,15 +231,18 @@ class ImportanceWeightedClassifier(object):
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Compute sample pairwise distances
         KXX = cdist(X, X, metric='euclidean')
         KXZ = cdist(X, Z, metric='euclidean')
 
-        # Assert non-negative distances
-        assert np.all(KXX >= 0)
-        assert np.all(KXZ >= 0)
+        # Check non-negative distances
+        if not np.all(KXX >= 0):
+            raise ValueError('Non-positive distance in source kernel.')
+        if not np.all(KXZ >= 0):
+            raise ValueError('Non-positive distance in source-target kernel.')
 
         # Compute kernels
         if self.kernel_type == 'rbf':
@@ -271,7 +282,8 @@ class ImportanceWeightedClassifier(object):
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Find importance-weights
         if self.iwe == 'lr':
@@ -285,7 +297,7 @@ class ImportanceWeightedClassifier(object):
         elif self.iwe == 'kmm':
             w = self.iwe_kernel_mean_matching(X, Z)
         else:
-            raise NotImplementedError
+            raise NotImplementedError('Estimator not implemented.')
 
         # Train a weighted classifier
         if self.loss == 'logistic':
@@ -299,7 +311,7 @@ class ImportanceWeightedClassifier(object):
             self.clf.fit(X, y, w)
         else:
             # Other loss functions are not implemented
-            raise NotImplementedError
+            raise NotImplementedError('Loss function not implemented.')
 
         # Mark classifier as trained
         self.is_trained = True
@@ -319,7 +331,9 @@ class ImportanceWeightedClassifier(object):
 
         # If classifier is trained, check for same dimensionality
         if self.is_trained:
-            assert self.train_data_dim == D
+            if not self.train_data_dim == D:
+                raise ValueError('''Test data is of different dimensionality 
+                                 than training data.''')
 
         # Call scikit's predict function
         preds = self.clf.predict(Z_)

@@ -4,9 +4,11 @@
 urlwrite('http://www.cs.ubc.ca/~schmidtm/Software/minFunc_2012.zip', 'minFunc_2012.zip')
 urlwrite('https://github.com/cjlin1/libsvm/archive/master.zip', 'libSVM.zip')
 
-% Unzip packages
+% Unzip and delete packages
 unzip('minFunc_2012');
+delete 'minFunc_2012.zip';
 unzip('libSVM');
+delete 'libSVM.zip';
 
 % Compile for libsvm
 cd libsvm-master/matlab

@@ -21,7 +21,7 @@ class TargetContrastivePessimisticClassifier(object):
     """
 
     def __init__(self, loss='lda', l2=1.0, max_iter=500, tolerance=1e-12,
-                 learning_rate=1.0, rate_decay='linear'):
+                 learning_rate=1.0, rate_decay='linear', verbosity=0):
         """
         Select a particular type of TCPR classifier.
 
@@ -48,6 +48,7 @@ class TargetContrastivePessimisticClassifier(object):
         self.tolerance = tolerance
         self.learning_rate = learning_rate
         self.rate_decay = rate_decay
+        self.verbosity = verbosity
 
         if self.loss in ['linear discriminant analysis', 'lda']:
 
@@ -265,7 +266,6 @@ class TargetContrastivePessimisticClassifier(object):
         # Check labels
         K = Y.shape[1]
         assert K > 1
-        assert np.all(np.sum(Y, axis=0) > 0)
 
         # Data shape
         N, D = X.shape
@@ -281,23 +281,37 @@ class TargetContrastivePessimisticClassifier(object):
             # Number of samples for current class
             Nk = np.sum(Y[:, k], axis=0)
 
-            # Proportion of samples for current class
-            pi[0, k] = Nk / N
+            # Check for no samples assigned to certain class
+            if Nk == 0:
 
-            # Mean of current class
-            mu[k, :] = np.dot(Y[:, k].T, X) / Nk
+                # Proportion of samples for current class
+                pi[0, k] = 0
 
-            # Subtract mean from data
-            X_ = X - mu[k, :]
+                # Mean of current class
+                mu[k, :] = np.zeros((1, D))
 
-            # Diagonalize current label vector
-            dYk = np.diag(Y[:, k])
+                # Covariance of current class
+                Si[:, :, k] = np.eye(D, D)
 
-            # Covariance of current class
-            Si[:, :, k] = np.dot(np.dot(X_.T, dYk), X_) / Nk
+            else:
 
-            # Regularization
-            Si[:, :, k] = regularize_matrix(Si[:, :, k], a=self.l2)
+                # Proportion of samples for current class
+                pi[0, k] = Nk / N
+
+                # Mean of current class
+                mu[k, :] = np.dot(Y[:, k].T, X) / Nk
+
+                # Subtract mean from data
+                X_ = X - mu[k, :]
+
+                # Diagonalize current label vector
+                dYk = np.diag(Y[:, k])
+
+                # Covariance of current class
+                Si[:, :, k] = np.dot(np.dot(X_.T, dYk), X_) / Nk
+
+                # Regularization
+                Si[:, :, k] = regularize_matrix(Si[:, :, k], a=self.l2)
 
         # Check for linear or quadratic discriminant analysis
         if self.loss == 'lda':

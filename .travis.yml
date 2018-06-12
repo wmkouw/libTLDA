@@ -46,10 +46,13 @@ before_install:
   - "conda list" # Show the package versions (for debugging)
 
 install:
-  - pip install .
+  - "pip install ."
 
-# command to run tests, e.g. python setup.py test
 script:
-  - cd libtlda
-  - python example.py
-#  - coverage run --source=python -m pytest
+  - "coverage run --source=libtlda -m pytest"
+  # - python libtlda/demos/example.py
+
+after_script:
+  - "pip install scrutinizer-ocular"
+  - "ocular"
+  
