@@ -31,3 +31,30 @@ def test_iwe_logistic_discrimination():
     clf = ImportanceWeightedClassifier()
     iw = clf.iwe_logistic_discrimination(X, Z)
     assert np.all(iw >= 0)
+
+
+def test_iwe_kernel_densities():
+    """Test for estimating through kernel density estimation."""
+    X = rnd.randn(10, 2)
+    Z = rnd.randn(10, 2) + 1
+    clf = ImportanceWeightedClassifier()
+    iw = clf.iwe_kernel_densities(X, Z)
+    assert np.all(iw >= 0)
+
+
+def test_iwe_kernel_mean_matching():
+    """Test for estimating through kernel mean matching."""
+    X = rnd.randn(10, 2)
+    Z = rnd.randn(10, 2) + 1
+    clf = ImportanceWeightedClassifier()
+    iw = clf.iwe_kernel_mean_matching(X, Z)
+    assert np.all(iw >= 0)
+
+
+def test_iwe_nearest_neighbours():
+    """Test for estimating through nearest neighbours."""
+    X = rnd.randn(10, 2)
+    Z = rnd.randn(10, 2) + 1
+    clf = ImportanceWeightedClassifier()
+    iw = clf.iwe_nearest_neighbours(X, Z)
+    assert np.all(iw >= 0)

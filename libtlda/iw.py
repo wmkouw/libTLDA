@@ -159,9 +159,25 @@ class ImportanceWeightedClassifier(object):
         """
         Estimate importance weights based on kernel density estimation.
 
-        INPUT   (1) array 'X': source data (N samples by D features)
-                (2) array 'Z': target data (M samples by D features)
-        OUTPUT  (1) array: importance weights (N samples by 1)
+        Parameters
+        ----------
+        X : array
+            source data (N samples by D features)
+        Z : array
+            target data (M samples by D features)
+
+        Returns
+        -------
+        iw : array
+            importance weights (N samples by 1)
+
+        Examples
+        --------
+        X = np.random.randn(10, 2)
+        Z = np.random.randn(10, 2)
+        clf = ImportanceWeightedClassifier()
+        iw = clf.iwe_kernel_densities(X, Z)
+
         """
         # Data shapes
         N, DX = X.shape
@@ -188,9 +204,25 @@ class ImportanceWeightedClassifier(object):
         """
         Estimate importance weights based on logistic regression.
 
-        INPUT   (1) array 'X': source data (N samples by D features)
-                (2) array 'Z': target data (M samples by D features)
-        OUTPUT  (1) array: importance weights (N samples by 1)
+        Parameters
+        ----------
+        X : array
+            source data (N samples by D features)
+        Z : array
+            target data (M samples by D features)
+
+        Returns
+        -------
+        iw : array
+            importance weights (N samples by 1)
+
+        Examples
+        --------
+        X = np.random.randn(10, 2)
+        Z = np.random.randn(10, 2)
+        clf = ImportanceWeightedClassifier()
+        iw = clf.iwe_logistic_discrimination(X, Z)
+
         """
         # Data shapes
         N, DX = X.shape
@@ -220,9 +252,25 @@ class ImportanceWeightedClassifier(object):
         """
         Estimate importance weights based on nearest-neighbours.
 
-        INPUT   (1) array 'X': source data (N samples by D features)
-                (2) array 'Z': target data (M samples by D features)
-        OUTPUT  (1) array: importance weights (N samples by 1)
+        Parameters
+        ----------
+        X : array
+            source data (N samples by D features)
+        Z : array
+            target data (M samples by D features)
+
+        Returns
+        -------
+        iw : array
+            importance weights (N samples by 1)
+
+        Examples
+        --------
+        X = np.random.randn(10, 2)
+        Z = np.random.randn(10, 2)
+        clf = ImportanceWeightedClassifier()
+        iw = clf.iwe_nearest_neighbours(X, Z)
+
         """
         # Data shapes
         N, DX = X.shape
@@ -254,9 +302,25 @@ class ImportanceWeightedClassifier(object):
         """
         Estimate importance weights based on kernel mean matching.
 
-        INPUT   (1) array 'X': source data (N samples by D features)
-                (2) array 'Z': target data (M samples by D features)
-        OUTPUT  (1) array: importance weights (N samples by 1)
+        Parameters
+        ----------
+        X : array
+            source data (N samples by D features)
+        Z : array
+            target data (M samples by D features)
+
+        Returns
+        -------
+        iw : array
+            importance weights (N samples by 1)
+
+        Examples
+        --------
+        X = np.random.randn(10, 2)
+        Z = np.random.randn(10, 2)
+        clf = ImportanceWeightedClassifier()
+        iw = clf.iwe_kernel_mean_matching(X, Z)
+
         """
         # Data shapes
         N, DX = X.shape
@@ -304,10 +368,26 @@ class ImportanceWeightedClassifier(object):
         """
         Fit/train an importance-weighted classifier.
 
-        INPUT   (1) array 'X': source data (N samples by D features)
-                (2) array 'y': source labels (N samples by 1)
-                (3) array 'Z': target data (M samples by D features)
-        OUTPUT  None
+        Arguments
+        X : array
+            source data (N samples by D features)
+        y : array
+            source labels (N samples by 1)
+        Z : array
+            target data (M samples by D features)
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        X = np.random.randn(10, 2)
+        y = np.vstack((-np.ones((5,)), np.ones((5,))))
+        Z = np.random.randn(10, 2)
+        clf = ImportanceWeightedClassifier()
+        clf.fit(X, y, Z)
+
         """
         # Data shapes
         N, DX = X.shape
@@ -355,8 +435,25 @@ class ImportanceWeightedClassifier(object):
         """
         Make predictions on new dataset.
 
-        INPUT   (1) array 'Z_': new data set (M samples by D features)
-        OUTPUT  (2) array 'preds': label predictions (M samples by 1)
+        Arguments
+        ---------
+        Z_ : array
+            new data set (M samples by D features)
+
+        Returns
+        -------
+        preds : array
+            label predictions (M samples by 1)
+
+        Examples
+        --------
+        X = np.random.randn(10, 2)
+        y = np.vstack((-np.ones((5,)), np.ones((5,))))
+        Z = np.random.randn(10, 2)
+        clf = ImportanceWeightedClassifier()
+        clf.fit(X, y, Z)
+        u_pred = clf.predict(Z)
+
         """
         # Data shape
         M, D = Z_.shape
@@ -364,7 +461,7 @@ class ImportanceWeightedClassifier(object):
         # If classifier is trained, check for same dimensionality
         if self.is_trained:
             if not self.train_data_dim == D:
-                raise ValueError('''Test data is of different dimensionality 
+                raise ValueError('''Test data is of different dimensionality
                                  than training data.''')
 
         # Call scikit's predict function
