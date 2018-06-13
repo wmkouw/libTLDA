@@ -58,3 +58,25 @@ def test_iwe_nearest_neighbours():
     clf = ImportanceWeightedClassifier()
     iw = clf.iwe_nearest_neighbours(X, Z)
     assert np.all(iw >= 0)
+
+
+def test_fit():
+    """Test for fitting the model."""
+    X = rnd.randn(10, 2)
+    y = np.hstack((-np.ones((5,)), np.ones((5,))))
+    Z = rnd.randn(10, 2) + 1
+    clf = ImportanceWeightedClassifier()
+    clf.fit(X, y, Z)
+    assert clf.is_trained
+
+
+def test_predict():
+    """Test for making predictions."""
+    X = rnd.randn(10, 2)
+    y = np.hstack((-np.ones((5,)), np.ones((5,))))
+    Z = rnd.randn(10, 2) + 1
+    clf = ImportanceWeightedClassifier()
+    clf.fit(X, y, Z)
+    u_pred = clf.predict(Z)
+    labels = np.unique(y)
+    assert len(np.setdiff1d(np.unique(u_pred), labels)) == 0
