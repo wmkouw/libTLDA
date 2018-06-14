@@ -75,7 +75,8 @@ class SubspaceAlignedClassifier(object):
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:             
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Compute principal components
         CX = PCA(n_components=num_components, whiten=True).fit(X).components_.T
@@ -101,7 +102,7 @@ class SubspaceAlignedClassifier(object):
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:             raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Transfer component analysis (store target subspace)
         V, CX, self.CZ = self.subspace_alignment(X, Z, num_components=self.

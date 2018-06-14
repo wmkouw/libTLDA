@@ -319,6 +319,10 @@ class TargetContrastivePessimisticClassifier(object):
             # In LDA, the class-covariance matrices are combined
             Si = self.combine_class_covariances(Si, pi)
 
+        # Check for numerical problems
+        if np.any(np.isnan(mu)) or np.any(np.isnan(Si)):
+            raise RuntimeError('Parameter estimate is NaN.')
+
         return pi, mu, Si
 
     def combine_class_covariances(self, Si, pi):
@@ -360,21 +364,21 @@ class TargetContrastivePessimisticClassifier(object):
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Augment data with bias if necessary
         X, DX = self.remove_intercept(X)
         Z, DZ = self.remove_intercept(Z)
 
-        # Label properties
-        classes = np.unique(y)
+        # Map labels to one-hot-encoding
+        Y, classes = one_hot(y)
+
+        # Number of classes
         K = len(classes)
 
         # Check for at least 2 classes
         assert K > 1
-
-        # Map labels to one-hot-encoding
-        Y = one_hot(y)
 
         # Estimate parameters of source model
         theta_ref = self.discriminant_parameters(X, Y)
@@ -415,13 +419,15 @@ class TargetContrastivePessimisticClassifier(object):
 
             # Monitor progress
 
+            # Check for 
+
             # Risks of current parameters
             R_tcp = self.risk(Z, theta_tcp, q)
             R_ref = self.risk(Z, theta_ref, q)
 
             # Assert no numerical problems
-            assert not np.isnan(R_tcp)
-            assert not np.isnan(R_ref)
+            if np.isnan(R_tcp) or np.isnan(R_ref):
+                raise RuntimeError('Objective is NaN.')
 
             # Current TCP risk
             TCPRt_ = R_tcp - R_ref
@@ -459,7 +465,8 @@ class TargetContrastivePessimisticClassifier(object):
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         if self.loss in ['lda', 'qda']:
 
@@ -500,6 +507,9 @@ class TargetContrastivePessimisticClassifier(object):
 
             # Take largest probability as predictions
             preds = np.argmax(probs, axis=1)
+
+        # Map predictions back to original labels
+        preds = self.classes[preds]
 
         # Return predictions array
         return preds

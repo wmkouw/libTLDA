@@ -62,7 +62,7 @@ class StructuralCorrespondenceClassifier(object):
         # Dimensionality of training data
         self.train_data_dim = ''
 
-    def augment_features(self, X, Z):
+    def augment_features(self, X, Z, l2=0.0):
         """
         Find a set of pivot features, train predictors and extract bases.
 
@@ -107,8 +107,14 @@ class StructuralCorrespondenceClassifier(object):
             # Store optimal parameters
             P[:, l] = results.x
 
+        # Compute covariance matrix of predictors
+        SP = np.cov(P)
+
+        # Add regularization to ensure positive-definiteness
+        SP += l2*np.eye(self.num_pivots)
+
         # Eigenvalue decomposition of pivot predictor matrix
-        V, C = np.linalg.eig(np.cov(P))
+        V, C = np.linalg.eig(SP)
 
         # Reduce number of components
         C = C[:, :self.num_components]
@@ -186,7 +192,7 @@ class StructuralCorrespondenceClassifier(object):
         assert DX == DZ
 
         # Augment features
-        X, _, self.C = self.augment_features(X, Z)
+        X, _, self.C = self.augment_features(X, Z, l2=self.l2)
 
         # Train a classifier
         if self.loss == 'logistic':

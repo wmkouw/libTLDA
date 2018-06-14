@@ -79,7 +79,8 @@ class FeatureLevelDomainAdaptiveClassifier(object):
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Blankout and dropout have same maximum likelihood estimator
         if (dist == 'blankout') or (dist == 'dropout'):
@@ -263,13 +264,14 @@ class FeatureLevelDomainAdaptiveClassifier(object):
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
-
-        # Number of classes
-        K = len(np.unique(y))
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Map to one-not-encoding
-        Y = one_hot(y, one_not=True)
+        Y, labels = one_hot(y, one_not=True)
+
+        # Number of classes
+        K = len(labels)
 
         # Compute transfer distribution parameters
         iota = self.mle_transfer_dist(X, Z)
@@ -311,6 +313,9 @@ class FeatureLevelDomainAdaptiveClassifier(object):
         # Store trained classifier parameters
         self.theta = theta
 
+        # Store classes
+        self.classes = labels
+
         # Mark classifier as trained
         self.is_trained = True
 
@@ -335,6 +340,9 @@ class FeatureLevelDomainAdaptiveClassifier(object):
 
         # Predict target labels
         preds = np.argmax(np.dot(Z_, self.theta), axis=1)
+
+        # Map predictions back to labels
+        preds = self.classes[preds]
 
         # Return predictions array
         return preds

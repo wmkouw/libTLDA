@@ -184,7 +184,8 @@ class RobustBiasAwareClassifier(object):
         M, DZ = Z.shape
 
         # Number of classes
-        self.K = len(np.unique(y))
+        labels = np.unique(y)
+        self.K = len(labels)
 
         # Assert equivalent dimensionalities
         assert DX == DZ
@@ -254,6 +255,9 @@ class RobustBiasAwareClassifier(object):
         # Store resultant classifier parameters
         self.theta = theta
 
+        # Store classes
+        self.classes = labels
+
         # Mark classifier as trained
         self.is_trained = True
 
@@ -284,6 +288,9 @@ class RobustBiasAwareClassifier(object):
 
         # Predictions through max-posteriors
         preds = np.argmax(pyz, axis=1)
+
+        # Map predictions back to original labels
+        preds = self.classes[preds]
 
         # Return predictions array
         return preds

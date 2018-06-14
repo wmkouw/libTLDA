@@ -3,15 +3,10 @@ import numpy.random as rnd
 from libtlda.iw import ImportanceWeightedClassifier
 
 
-def test_init01():
+def test_init():
     """Test for object type."""
     clf = ImportanceWeightedClassifier()
     assert type(clf) == ImportanceWeightedClassifier
-
-
-def test_init02():
-    """Test for is_trained model."""
-    clf = ImportanceWeightedClassifier()
     assert not clf.is_trained
 
 

@@ -11,14 +11,14 @@ import scipy.stats as st
 
 def one_hot(y, fill_k=False, one_not=False):
     """Map to one-hot encoding."""
-    # Check for negative labels
-    assert np.all(y >= 0)
+    # Check labels
+    labels = np.unique(y)
+
+    # Number of classes
+    K = len(labels)
 
     # Number of samples
     N = y.shape[0]
-
-    # Number of classes
-    K = len(np.unique(y))
 
     # Preallocate array
     if one_not:
@@ -29,12 +29,15 @@ def one_hot(y, fill_k=False, one_not=False):
     # Set k-th column to 1 for n-th sample
     for n in range(N):
 
-        if fill_k:
-            Y[n, y[n]] = y[n]
-        else:
-            Y[n, y[n]] = 1
+        # Map current class to index label
+        y_n = (y[n] == labels)
 
-    return Y
+        if fill_k:
+            Y[n, y_n] = y_n
+        else:
+            Y[n, y_n] = 1
+
+    return Y, labels
 
 
 def regularize_matrix(A, a=0.0):
