@@ -50,10 +50,12 @@ def regularize_matrix(A, a=0.0):
     """
     # Check for square matrix
     N, M = A.shape
-    assert N == M
+    if not N == M:
+        raise ValueError('Matrix not square.')
 
     # Check for valid matrix entries
-    assert not np.any(np.isnan(A)) or np.any(np.isinf(A))
+    if np.any(np.isnan(A)) or np.any(np.isinf(A)):
+        raise ValueError('Matrix contains NaNs or infinities.')
 
     # Check for non-negative minimum eigenvalue
     if a < 0:

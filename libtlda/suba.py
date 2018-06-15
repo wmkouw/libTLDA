@@ -26,11 +26,24 @@ class SubspaceAlignedClassifier(object):
         """
         Select a particular type of subspace aligned classifier.
 
-        INPUT   (1) str 'loss': loss function for weighted classifier, options:
-                    'logistic', 'quadratic', 'hinge' (def: 'logistic')
-                (2) float 'l2': l2-regularization parameter value (def:0.01)
-                (3) int 'num_components': number of transfer components to
-                    maintain (def: 1)
+        Arguments
+        ---------
+        loss : str
+            loss function for weighted classifier, options: 'logistic',
+            'quadratic', 'hinge' (def: 'logistic')
+        l2 : float
+            l2-regularization parameter value (def:0.01)
+        num_components : int
+            number of transfer components to maintain (def: 1)
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        clf = SubspaceAlignedClassifier(loss='hinge', l2=0.1)
+
         """
         self.loss = loss
         self.l2 = l2
@@ -48,10 +61,7 @@ class SubspaceAlignedClassifier(object):
             self.clf = LinearSVC()
         else:
             # Other loss functions are not implemented
-            raise NotImplementedError
-
-        # Maintain target principal component coefficients
-        self.CZ = ''
+            raise NotImplementedError('Loss function not implemented.')
 
         # Whether model has been trained
         self.is_trained = False
@@ -63,19 +73,38 @@ class SubspaceAlignedClassifier(object):
         """
         Compute subspace and alignment matrix.
 
-        INPUT   (1) array 'X': source data set (N samples by D features)
-                (2) array 'Z': target data set (M samples by D features)
-                (3) int 'num_components': number of components (def: 1)
-        OUTPUT  (1) array 'V': transformation matrix (D features by D features)
-                (2) array 'CX': source principal component coefficients
-                (3) array 'CZ': target principal component coefficients
+        Arguments
+        ---------
+        X : array
+            source data set (N samples by D features)
+        Z : array
+            target data set (M samples by D features)
+        num_components : int
+            number of components (def: 1)
+
+        Returns
+        -------
+        V : array
+            transformation matrix (D features by D features)
+        CX : array
+            source principal component coefficients
+        CZ : array
+            target principal component coefficients
+
+        Examples
+        --------
+        X = np.random.randn(100, 10)
+        Z = np.random.randn(100, 10)*2 + 1
+        clf = SubspaceAlignedClassifier()
+        V, CX, CZ = clf.subspace_alignment(X, Z, num_components=2)
+
         """
         # Data shapes
         N, DX = X.shape
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        if not DX == DZ:             
+        if not DX == DZ:
             raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Compute principal components
@@ -92,21 +121,41 @@ class SubspaceAlignedClassifier(object):
         """
         Fit/train a classifier on data mapped onto transfer components.
 
-        INPUT   (1) array 'X': source data (N samples by D features)
-                (2) array 'y': source labels (N samples by 1)
-                (3) array 'Z': target data (M samples by D features)
-        OUTPUT  None
+        Arguments
+        X : array
+            source data (N samples by D features)
+        y : array
+            source labels (N samples by 1)
+        Z : array
+            target data (M samples by D features)
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        X = np.random.randn(10, 2)
+        y = np.vstack((-np.ones((5,)), np.ones((5,))))
+        Z = np.random.randn(10, 2)
+        clf = SubspaceAlignedClassifier()
+        clf.fit(X, y, Z)
+
         """
         # Data shapes
         N, DX = X.shape
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        if not DX == DZ:             raise ValueError('Dimensionalities of X and Z should be equal.')
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
-        # Transfer component analysis (store target subspace)
-        V, CX, self.CZ = self.subspace_alignment(X, Z, num_components=self.
-                                                 num_components)
+        # Transfer component analysis
+        V, CX, CZ = self.subspace_alignment(X, Z,
+                                            num_components=self.num_components)
+
+        # Store target subspace
+        self.target_subspace = CZ
 
         # Map source data onto source principal components
         X = np.dot(X, CX)
@@ -138,9 +187,27 @@ class SubspaceAlignedClassifier(object):
         """
         Make predictions on new dataset.
 
-        INPUT   (1) array 'Z_': new data set (M samples by D features)
-                (2) boolean 'whiten': whether to whiten new data (def: false)
-        OUTPUT  (1) array 'preds': label predictions (M samples by 1)
+        Arguments
+        ---------
+        Z_ : array
+            new data set (M samples by D features)
+        whiten : boolean
+            whether to whiten new data (def: false)
+
+        Returns
+        -------
+        preds : array
+            label predictions (M samples by 1)
+
+        Examples
+        --------
+        X = np.random.randn(10, 2)
+        y = np.vstack((-np.ones((5,)), np.ones((5,))))
+        Z = np.random.randn(10, 2)
+        clf = SubspaceAlignedClassifier()
+        clf.fit(X, y, Z)
+        preds = clf.predict(Z)
+
         """
         # Data shape
         M, D = Z_.shape
@@ -154,7 +221,7 @@ class SubspaceAlignedClassifier(object):
             Z_ = st.zscore(Z_)
 
         # Map new target data onto target subspace
-        Z_ = np.dot(Z_, self.CZ)
+        Z_ = np.dot(Z_, self.target_subspace)
 
         # Call scikit's predict function
         preds = self.clf.predict(Z_)
