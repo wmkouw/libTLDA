@@ -56,7 +56,7 @@ Given a trained classifier, predictions can be made as follows:
 predictions = clf.predict(Z)
 ```
 
-Check the documentation for more information on specific classes, methods and functions.
+Check the [documentation](https://libtlda.readthedocs.io/en/latest/) for more information on specific classes, methods and functions.
 
 ## Matlab
 

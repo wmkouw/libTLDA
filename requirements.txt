@@ -1,8 +1,11 @@
 numpy>=1.13.3
+numpydoc>=0.7.0
 matplotlib>=2.0.2
 ipython>=5.5.0
 scipy>=0.11
 scikit-learn>=0.15.0
+Sphinx>=1.6.6
+conda>=4.4.10
 Keras>=2.0.0
 tensorflow>=0.12.1
 cvxopt>=1.1.9
