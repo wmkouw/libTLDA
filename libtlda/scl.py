@@ -27,12 +27,23 @@ class StructuralCorrespondenceClassifier(object):
         """
         Select a particular type of importance-weighted classifier.
 
-        INPUT   (1) str 'loss': loss function for weighted classifier, options:
-                    'logistic', 'quadratic', 'hinge' (def: 'logistic')
-                (2) float 'l2': l2-regularization parameter value (def:0.01)
-                (3) int 'num_pivots': number of pivot features to use (def: 1)
-                (4) int 'num_components': number of components to use after
-                    extracting pivot features (def: 1)
+        Parameters
+        ----------
+        loss : str
+            loss function for weighted classifier, options: 'logistic',
+                'quadratic', 'hinge' (def: 'logistic')
+        l2 : float
+            l2-regularization parameter value (def:0.01)
+        num_pivots : int
+            number of pivot features to use (def: 1)
+        num_components : int
+            number of components to use after extracting pivot features
+            (def: 1)
+
+        Returns
+        -------
+        None
+
         """
         self.loss = loss
         self.l2 = l2
@@ -51,7 +62,7 @@ class StructuralCorrespondenceClassifier(object):
             self.clf = LinearSVC()
         else:
             # Other loss functions are not implemented
-            raise NotImplementedError
+            raise NotImplementedError('Loss not implemented yet.')
 
         # Whether model has been trained
         self.is_trained = False
@@ -66,15 +77,26 @@ class StructuralCorrespondenceClassifier(object):
         """
         Find a set of pivot features, train predictors and extract bases.
 
-        INPUT   (1) array 'X': source data array (N samples by D features)
-                (2) array 'Z': target data array (M samples by D features)
+        Parameters
+        X : array
+            source data array (N samples by D features)
+        Z : array
+            target data array (M samples by D features)
+        l2 : float
+            regularization parameter value (def: 0.0)
+
+        Returns
+        -------
+        None
+
         """
         # Data shapes
         N, DX = X.shape
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Concatenate source and target data
         XZ = np.concatenate((X, Z), axis=0)
@@ -132,12 +154,22 @@ class StructuralCorrespondenceClassifier(object):
         Reference: Ando & Zhang (2005a). A framework for learning predictive
         structures from multiple tasks and unlabeled data. JMLR.
 
-        INPUT   (1) array 'theta': classifier parameters (D features by 1)
-                (2) array 'X': data (N samples by D features)
-                (3) array 'y': label vector (N samples by 1)
-                (4) float 'l2': l2-regularization parameter (def= 0.0)
-        OUTPUT  (1) Loss/objective function value
-                (2) Gradient with respect to classifier parameters
+        Parameters
+        ----------
+        theta : array
+            classifier parameters (D features by 1)
+        X : array
+            data (N samples by D features)
+        y : array
+            label vector (N samples by 1)
+        l2 : float
+            l2-regularization parameter (def= 0.0)
+
+        Returns
+        -------
+        array
+            Objective function value.
+
         """
         # Precompute terms
         Xy = (X.T*y.T).T
@@ -157,12 +189,22 @@ class StructuralCorrespondenceClassifier(object):
         Reference: Ando & Zhang (2005a). A framework for learning predictive
         structures from multiple tasks and unlabeled data. JMLR.
 
-        INPUT   (1) array 'theta': classifier parameters (D features by 1)
-                (2) array 'X': data (N samples by D features)
-                (3) array 'y': label vector (N samples by 1)
-                (4) float 'l2': l2-regularization parameter (def= 0.0)
-        OUTPUT  (1) Loss/objective function value
-                (2) Gradient with respect to classifier parameters
+        Parameters
+        ----------
+        theta : array
+            classifier parameters (D features by 1)
+        X : array
+            data (N samples by D features)
+        y : array
+            label vector (N samples by 1)
+        l2 : float
+            l2-regularization parameter (def= 0.0)
+
+        Returns
+        -------
+        array
+            Gradient with respect to classifier parameters
+
         """
         # Precompute terms
         Xy = (X.T*y.T).T
@@ -179,17 +221,27 @@ class StructuralCorrespondenceClassifier(object):
         """
         Fit/train an structural correpondence classifier.
 
-        INPUT   (1) array 'X': source data (N samples by D features)
-                (2) array 'y': source labels (N samples by 1)
-                (3) array 'Z': target data (M samples by D features)
-        OUTPUT  None
+        Parameters
+        ----------
+        X : array
+            source data (N samples by D features)
+        y : array
+            source labels (N samples by 1)
+        Z : array
+            target data (M samples by D features)
+
+        Returns
+        -------
+        None
+
         """
         # Data shapes
         N, DX = X.shape
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Augment features
         X, _, self.C = self.augment_features(X, Z, l2=self.l2)
@@ -206,7 +258,7 @@ class StructuralCorrespondenceClassifier(object):
             self.clf.fit(X, y)
         else:
             # Other loss functions are not implemented
-            raise NotImplementedError
+            raise NotImplementedError('Loss not implemented.')
 
         # Mark classifier as trained
         self.is_trained = True
@@ -214,27 +266,36 @@ class StructuralCorrespondenceClassifier(object):
         # Store training data dimensionality
         self.train_data_dim = DX + self.num_components
 
-    def predict(self, Z_):
+    def predict(self, Z):
         """
         Make predictions on new dataset.
 
-        INPUT   (1) array 'Z_': new data set (M samples by D features)
-        OUTPUT  (2) array 'preds': label predictions (M samples by 1)
+        Parameters
+        ----------
+        Z : array
+            new data set (M samples by D features)
+
+        Returns
+        -------
+        preds : array
+            label predictions (M samples by 1)
+
         """
         # Data shape
-        M, D = Z_.shape
+        M, D = Z.shape
 
         # If classifier is trained, check for same dimensionality
         if self.is_trained:
-            assert self.train_data_dim == D or \
-                   self.train_data_dim == D + self.num_components
+            if not self.train_data_dim == D:
+                raise ValueError('''Test data is of different dimensionality
+                                 than training data.''')
 
         # Check for augmentation
         if not self.train_data_dim == D:
-            Z_ = np.concatenate((np.dot(Z_, self.C), Z_), axis=1)
+            Z = np.concatenate((np.dot(Z, self.C), Z), axis=1)
 
         # Call scikit's predict function
-        preds = self.clf.predict(Z_)
+        preds = self.clf.predict(Z)
 
         # For quadratic loss function, correct predictions
         if self.loss == 'quadratic':

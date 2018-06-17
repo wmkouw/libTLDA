@@ -25,19 +25,28 @@ class TargetContrastivePessimisticClassifier(object):
         """
         Select a particular type of TCPR classifier.
 
-        INPUT   (1) str 'loss': loss function for TCP Risk, options: 'ls',
-                    'least_squares', 'lda', 'linear_discriminant_analysis',
-                    'qda', 'quadratic_discriminant_analysis' (def: 'lda')
-                (2) float 'l2': l2-regularization parameter value (def:0.01)
-                (3) int 'max_iter': maximum number of iterations for
-                    optimization (def: 500)
-                (4) float 'tolerance': convergence criterion on the TCP
-                    parameters (def: 1e-5)
-                (5) float 'learning_rate': parameter for size of update of
-                    gradient (def: 1.0)
-                (6) str 'rate_decay': type of learning rate decay, options:
-                    'linear', 'quadratic', 'geometric', 'exponential'
-                    (def: 'linear')
+        Parameters
+        ----------
+        loss : str
+            loss function for TCP Risk, options: 'ls', 'least_squares', 'lda',
+            'linear_discriminant_analysis', 'qda',
+            'quadratic_discriminant_analysis' (def: 'lda')
+        l2 : float
+            l2-regularization parameter value (def:0.01)
+        max_iter : int
+            maximum number of iterations for optimization (def: 500)
+        tolerance : float
+            convergence criterion on the TCP parameters (def: 1e-5)
+        learning_rate : float
+            parameter for size of update of gradient (def: 1.0)
+        rate_decay : str
+            type of learning rate decay, options: 'linear', 'quadratic',
+            'geometric', 'exponential' (def: 'linear')
+
+        Returns
+        -------
+        None
+
         """
         # Classifier options
         self.loss = loss
@@ -117,9 +126,18 @@ class TargetContrastivePessimisticClassifier(object):
         Reference: "Efficient Projections onto the L1-Ball for Learning in High
         Dimensions (Duchi, Shalev-Shwartz, Singer, Chandra, 2006)."
 
-        INPUT   (1) array 'v': vector to be projected (n dimensions by 0)
-                (2) float 'z': constant (def: 1.0)
-        OUTPUT  (1) array 'w': projected vector (n dimensions by 0)
+        Parameters
+        ----------
+        v : array
+            vector to be projected (n dimensions by 0)
+        z : float
+            constant (def: 1.0)
+
+        Returns
+        -------
+        w : array
+            projected vector (n dimensions by 0)
+
         """
         # Number of dimensions
         n = v.shape[0]
@@ -142,7 +160,20 @@ class TargetContrastivePessimisticClassifier(object):
         return w
 
     def learning_rate_t(self, t):
-        """Compute current learning rate after decay."""
+        """
+        Compute current learning rate after decay.
+
+        Parameters
+        ----------
+        t : int
+            current iteration
+
+        Returns
+        -------
+        alpha : float
+            current learning rate
+
+        """
         # Select rate decay
         if self.rate_decay == 'linear':
 
@@ -173,11 +204,20 @@ class TargetContrastivePessimisticClassifier(object):
         """
         Compute target contrastive pessimistic risk.
 
-        INPUT   (1) array 'Z': target samples (M samples by D features)
-                (2) array 'theta': classifier parameters (D features by
-                    K classes)
-                (3) array 'q': soft labels (M samples by K classes)
-        OUTPUT  (1) float: risk
+        Parameters
+        ----------
+        Z : array
+            target samples (M samples by D features)
+        theta : array
+            classifier parameters (D features by K classes)
+        q : array
+            soft labels (M samples by K classes)
+
+        Returns
+        -------
+        float
+            Value of risk function.
+
         """
         # Number of classes
         K = q.shape[1]
@@ -199,18 +239,30 @@ class TargetContrastivePessimisticClassifier(object):
         """
         Compute negative log-likelihood under Gaussian distributions.
 
-        INPUT   (1) array 'X': data (N samples by D features)
-                (2) tuple 'theta': containing class proportions 'pi', class
-                    means 'mu', and class-covariances 'Si'
-        OUTPUT  (1) array 'L': loss (N samples by K classes)
+        Parameters
+        ----------
+        X : array
+            data (N samples by D features)
+        theta : tuple(array, array, array)
+            tuple containing class proportions 'pi', class means 'mu',
+            and class-covariances 'Si'
+
+        Returns
+        -------
+        L : array
+            loss (N samples by K classes)
+
         """
         # Unpack parameters
         pi, mu, Si = theta
 
         # Check if parameter sets match
-        assert pi.shape[1] == mu.shape[0]
-        assert mu.shape[1] == Si.shape[0]
-        assert Si.shape[0] == Si.shape[1]
+        if not pi.shape[1] == mu.shape[0]:
+            raise ValueError('Number proportions does not match number means.')
+
+        if not mu.shape[1] == Si.shape[0] == Si.shape[1]:
+            raise ValueError('''Dimensions of mean does not match dimensions of
+                              covariance matrix.''')
 
         # Number of classes
         K = pi.shape[1]
@@ -256,16 +308,29 @@ class TargetContrastivePessimisticClassifier(object):
         """
         Estimate parameters of Gaussian distribution for discriminant analysis.
 
-        INPUT   (1) array 'X': data array (N samples by D features)
-                (2) array 'Y': label array (N samples by K classes)
-        OUTPUT  (1) array 'pi': class proportions (1 by K classes)
-                (2) array 'mu': class means (K classes by D features)
-                (3) array 'Si': class covariances (D features D features by
-                    K classes)
+        Parameters
+        ----------
+        X : array
+            data array (N samples by D features)
+        Y : array
+            label array (N samples by K classes)
+
+        Returns
+        -------
+        pi : array
+            class proportions (1 by K classes)
+        mu : array
+            class means (K classes by D features)
+        Si : array
+            class covariances (D features D features by K classes)
+
         """
         # Check labels
         K = Y.shape[1]
-        assert K > 1
+
+        # Check for sufficient labels
+        if not K > 1:
+            raise ValueError('Number of classes should be larger than 1.')
 
         # Data shape
         N, D = X.shape
@@ -329,16 +394,26 @@ class TargetContrastivePessimisticClassifier(object):
         """
         Linear combination of class covariance matrices.
 
-        INPUT   (1) array 'Si': Covariance matrix (D features by D features by
-                    K classes)
-                (2) array 'pi': class proportions (1 by K classes)
-        OUTPUT  (1) array 'Si': Combined covariance matrix (D by D)
+        Parameters
+        ----------
+        Si : array
+            Covariance matrix (D features by D features by K classes)
+        pi : array
+            class proportions (1 by K classes)
+
+        Returns
+        -------
+        Si : array
+            Combined covariance matrix (D by D)
+
         """
         # Number of classes
         K = Si.shape[2]
 
         # Check if w is size K
-        assert pi.shape[1] == K
+        if not pi.shape[1] == K:
+            raise ValueError('''Number of proportions does not match with number
+                             classes of covariance matrix.''')
 
         # For each class
         for k in range(K):
@@ -353,11 +428,20 @@ class TargetContrastivePessimisticClassifier(object):
         """
         Target Contrastive Pessimistic Risk - discriminant analysis.
 
-        INPUT   (1) array 'X': source data (N samples by D features)
-                (2) array 'y': source labels (N samples by 1)
-                (3) array 'Z': target data (M samples by D features)
-        OUTPUT  (1) array 'theta': classifier parameters (D features by K
-                classes)
+        Parameters
+        ----------
+        X : array
+            source data (N samples by D features)
+        y : array
+            source labels (N samples by 1)
+        Z : array
+            target data (M samples by D features)
+
+        Returns
+        -------
+        theta : array
+            classifier parameters (D features by K classes)
+
         """
         # Data shapes
         N, DX = X.shape
@@ -378,7 +462,8 @@ class TargetContrastivePessimisticClassifier(object):
         K = len(classes)
 
         # Check for at least 2 classes
-        assert K > 1
+        if not K > 1:
+            raise ValueError('Number of classes should be larger than 1.')
 
         # Estimate parameters of source model
         theta_ref = self.discriminant_parameters(X, Y)
@@ -419,8 +504,6 @@ class TargetContrastivePessimisticClassifier(object):
 
             # Monitor progress
 
-            # Check for 
-
             # Risks of current parameters
             R_tcp = self.risk(Z, theta_tcp, q)
             R_ref = self.risk(Z, theta_ref, q)
@@ -455,10 +538,19 @@ class TargetContrastivePessimisticClassifier(object):
         """
         Fit/train an importance-weighted classifier.
 
-        INPUT   (1) array 'X': source data (N samples by D features)
-                (2) array 'y': source labels (N samples by 1)
-                (3) array 'Z': target data (M samples by D features)
-        OUTPUT  None
+        Parameters
+        ----------
+        X : array
+            source data (N samples by D features)
+        y : array
+            source labels (N samples by 1)
+        Z : array
+            target data (M samples by D features)
+
+        Returns
+        -------
+        None
+
         """
         # Data shapes
         N, DX = X.shape
@@ -489,16 +581,26 @@ class TargetContrastivePessimisticClassifier(object):
     def predict(self, Z_):
         """
         Make predictions on new dataset.
+        
+        Parameters
+        ----------
+        Z : array
+            new data set (M samples by D features)
 
-        INPUT   (1) array 'Z_': new data set (M samples by D features)
-        OUTPUT  (2) array 'preds': label predictions (M samples by 1)
+        Returns
+        -------
+        preds : array
+            label predictions (M samples by 1)
+
         """
         # Data shape
         M, D = Z_.shape
 
         # If classifier is trained, check for same dimensionality
         if self.is_trained:
-            assert D == self.train_data_dim
+            if not self.train_data_dim == D:
+                raise ValueError('''Test data is of different dimensionality
+                                 than training data.''')
 
         if self.loss in ['lda', 'qda']:
 

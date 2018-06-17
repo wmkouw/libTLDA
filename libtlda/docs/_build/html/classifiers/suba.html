@@ -1,0 +1,360 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Subspace Aligned Classifier &mdash; libTLDA 0.1.5 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Robust Bias-Aware Classifier" href="rba.html" />
+    <link rel="prev" title="Transfer Component Classifier" href="tca.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> libTLDA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.6
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../classifiers.html">Classifiers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="iw.html">Importance-Weighted Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tca.html">Transfer Component Classifier</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Subspace Aligned Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rba.html">Robust Bias-Aware Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scl.html">Structural Correspondence Learner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flda.html">Feature-Level Domain-Adaptive Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tcpr.html">Target Contrastive Pessimistic Classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">libTLDA</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../classifiers.html">Classifiers</a> &raquo;</li>
+        
+      <li>Subspace Aligned Classifier</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/classifiers/suba.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-libtlda.suba">
+<span id="subspace-aligned-classifier"></span><h1>Subspace Aligned Classifier<a class="headerlink" href="#module-libtlda.suba" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="libtlda.suba.SubspaceAlignedClassifier">
+<em class="property">class </em><code class="descclassname">libtlda.suba.</code><code class="descname">SubspaceAlignedClassifier</code><span class="sig-paren">(</span><em>loss='logistic'</em>, <em>l2=1.0</em>, <em>num_components=1</em><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.suba.SubspaceAlignedClassifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class of classifiers based on Subspace Alignment.</p>
+<p>Methods contain the alignment itself, classifiers and general utilities.</p>
+<p class="rubric">Examples</p>
+<div class="line-block">
+<div class="line">&gt;&gt;&gt;&gt; X = np.random.randn(10, 2)</div>
+<div class="line">&gt;&gt;&gt;&gt; y = np.vstack((-np.ones((5,)), np.ones((5,))))</div>
+<div class="line">&gt;&gt;&gt;&gt; Z = np.random.randn(10, 2)</div>
+<div class="line">&gt;&gt;&gt;&gt; clf = SubspaceAlignedClassifier()</div>
+<div class="line">&gt;&gt;&gt;&gt; clf.fit(X, y, Z)</div>
+<div class="line">&gt;&gt;&gt;&gt; preds = clf.predict(Z)</div>
+</div>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="libtlda.suba.SubspaceAlignedClassifier.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y</em>, <em>Z</em><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.suba.SubspaceAlignedClassifier.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit/train a classifier on data mapped onto transfer components.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X</strong> : array</p>
+<blockquote>
+<div><p>source data (N samples by D features)</p>
+</div></blockquote>
+<p><strong>y</strong> : array</p>
+<blockquote>
+<div><p>source labels (N samples by 1)</p>
+</div></blockquote>
+<p><strong>Z</strong> : array</p>
+<blockquote>
+<div><p>target data (M samples by D features)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libtlda.suba.SubspaceAlignedClassifier.get_params">
+<code class="descname">get_params</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.suba.SubspaceAlignedClassifier.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get classifier parameters.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libtlda.suba.SubspaceAlignedClassifier.is_trained">
+<code class="descname">is_trained</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.suba.SubspaceAlignedClassifier.is_trained" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether classifier is trained.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libtlda.suba.SubspaceAlignedClassifier.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>Z</em>, <em>whiten=False</em><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.suba.SubspaceAlignedClassifier.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make predictions on new dataset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>Z</strong> : array</p>
+<blockquote>
+<div><p>new data set (M samples by D features)</p>
+</div></blockquote>
+<p><strong>whiten</strong> : boolean</p>
+<blockquote>
+<div><p>whether to whiten new data (def: false)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>preds</strong> : array</p>
+<blockquote class="last">
+<div><p>label predictions (M samples by 1)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libtlda.suba.SubspaceAlignedClassifier.subspace_alignment">
+<code class="descname">subspace_alignment</code><span class="sig-paren">(</span><em>X</em>, <em>Z</em>, <em>num_components=1</em><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.suba.SubspaceAlignedClassifier.subspace_alignment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute subspace and alignment matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X</strong> : array</p>
+<blockquote>
+<div><p>source data set (N samples by D features)</p>
+</div></blockquote>
+<p><strong>Z</strong> : array</p>
+<blockquote>
+<div><p>target data set (M samples by D features)</p>
+</div></blockquote>
+<p><strong>num_components</strong> : int</p>
+<blockquote>
+<div><p>number of components (def: 1)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>V</strong> : array</p>
+<blockquote>
+<div><p>transformation matrix (D features by D features)</p>
+</div></blockquote>
+<p><strong>CX</strong> : array</p>
+<blockquote>
+<div><p>source principal component coefficients</p>
+</div></blockquote>
+<p><strong>CZ</strong> : array</p>
+<blockquote class="last">
+<div><p>target principal component coefficients</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rba.html" class="btn btn-neutral float-right" title="Robust Bias-Aware Classifier" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tca.html" class="btn btn-neutral" title="Transfer Component Classifier" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Wouter M. Kouw.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1.5',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

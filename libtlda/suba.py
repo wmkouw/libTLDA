@@ -20,14 +20,23 @@ class SubspaceAlignedClassifier(object):
     Class of classifiers based on Subspace Alignment.
 
     Methods contain the alignment itself, classifiers and general utilities.
+
+    Examples
+    --------
+    | >>>> X = np.random.randn(10, 2)
+    | >>>> y = np.vstack((-np.ones((5,)), np.ones((5,))))
+    | >>>> Z = np.random.randn(10, 2)
+    | >>>> clf = SubspaceAlignedClassifier()
+    | >>>> clf.fit(X, y, Z)
+    | >>>> preds = clf.predict(Z)
     """
 
     def __init__(self, loss='logistic', l2=1.0, num_components=1):
         """
         Select a particular type of subspace aligned classifier.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         loss : str
             loss function for weighted classifier, options: 'logistic',
             'quadratic', 'hinge' (def: 'logistic')
@@ -39,10 +48,6 @@ class SubspaceAlignedClassifier(object):
         Returns
         -------
         None
-
-        Examples
-        --------
-        clf = SubspaceAlignedClassifier(loss='hinge', l2=0.1)
 
         """
         self.loss = loss
@@ -73,8 +78,8 @@ class SubspaceAlignedClassifier(object):
         """
         Compute subspace and alignment matrix.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         X : array
             source data set (N samples by D features)
         Z : array
@@ -90,13 +95,6 @@ class SubspaceAlignedClassifier(object):
             source principal component coefficients
         CZ : array
             target principal component coefficients
-
-        Examples
-        --------
-        X = np.random.randn(100, 10)
-        Z = np.random.randn(100, 10)*2 + 1
-        clf = SubspaceAlignedClassifier()
-        V, CX, CZ = clf.subspace_alignment(X, Z, num_components=2)
 
         """
         # Data shapes
@@ -121,7 +119,8 @@ class SubspaceAlignedClassifier(object):
         """
         Fit/train a classifier on data mapped onto transfer components.
 
-        Arguments
+        Parameters
+        ----------
         X : array
             source data (N samples by D features)
         y : array
@@ -132,14 +131,6 @@ class SubspaceAlignedClassifier(object):
         Returns
         -------
         None
-
-        Examples
-        --------
-        X = np.random.randn(10, 2)
-        y = np.vstack((-np.ones((5,)), np.ones((5,))))
-        Z = np.random.randn(10, 2)
-        clf = SubspaceAlignedClassifier()
-        clf.fit(X, y, Z)
 
         """
         # Data shapes
@@ -183,13 +174,13 @@ class SubspaceAlignedClassifier(object):
         # Store training data dimensionality
         self.train_data_dim = DX
 
-    def predict(self, Z_, whiten=False):
+    def predict(self, Z, whiten=False):
         """
         Make predictions on new dataset.
 
-        Arguments
-        ---------
-        Z_ : array
+        Parameters
+        ----------
+        Z : array
             new data set (M samples by D features)
         whiten : boolean
             whether to whiten new data (def: false)
@@ -199,32 +190,25 @@ class SubspaceAlignedClassifier(object):
         preds : array
             label predictions (M samples by 1)
 
-        Examples
-        --------
-        X = np.random.randn(10, 2)
-        y = np.vstack((-np.ones((5,)), np.ones((5,))))
-        Z = np.random.randn(10, 2)
-        clf = SubspaceAlignedClassifier()
-        clf.fit(X, y, Z)
-        preds = clf.predict(Z)
-
         """
         # Data shape
-        M, D = Z_.shape
+        M, D = Z.shape
 
         # If classifier is trained, check for same dimensionality
         if self.is_trained:
-            assert self.train_data_dim == D
+            if not self.train_data_dim == D:
+                raise ValueError('''Test data is of different dimensionality
+                                 than training data.''')
 
         # Check for need to whiten data beforehand
         if whiten:
-            Z_ = st.zscore(Z_)
+            Z = st.zscore(Z)
 
         # Map new target data onto target subspace
-        Z_ = np.dot(Z_, self.target_subspace)
+        Z = np.dot(Z, self.target_subspace)
 
         # Call scikit's predict function
-        preds = self.clf.predict(Z_)
+        preds = self.clf.predict(Z)
 
         # For quadratic loss function, correct predictions
         if self.loss == 'quadratic':

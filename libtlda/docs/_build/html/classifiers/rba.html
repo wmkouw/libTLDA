@@ -1,0 +1,428 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Robust Bias-Aware Classifier &mdash; libTLDA 0.1.5 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Structural Correspondence Learner" href="scl.html" />
+    <link rel="prev" title="Subspace Aligned Classifier" href="suba.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> libTLDA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.6
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../classifiers.html">Classifiers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="iw.html">Importance-Weighted Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tca.html">Transfer Component Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="suba.html">Subspace Aligned Classifier</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Robust Bias-Aware Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scl.html">Structural Correspondence Learner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flda.html">Feature-Level Domain-Adaptive Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tcpr.html">Target Contrastive Pessimistic Classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">libTLDA</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../classifiers.html">Classifiers</a> &raquo;</li>
+        
+      <li>Robust Bias-Aware Classifier</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/classifiers/rba.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="robust-bias-aware-classifier">
+<h1>Robust Bias-Aware Classifier<a class="headerlink" href="#robust-bias-aware-classifier" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-libtlda.rba"></span><dl class="class">
+<dt id="libtlda.rba.RobustBiasAwareClassifier">
+<em class="property">class </em><code class="descclassname">libtlda.rba.</code><code class="descname">RobustBiasAwareClassifier</code><span class="sig-paren">(</span><em>l2=0.0</em>, <em>order='first'</em>, <em>gamma=1.0</em>, <em>tau=1e-05</em>, <em>max_iter=100</em>, <em>clip=1000</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.rba.RobustBiasAwareClassifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class of robust bias-aware classifiers.</p>
+<p>Reference: Liu &amp; Ziebart (20140. Robust Classification under Sample
+Selection Bias. NIPS.</p>
+<p>Methods contain training and prediction functions.</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="libtlda.rba.RobustBiasAwareClassifier.feature_stats">
+<code class="descname">feature_stats</code><span class="sig-paren">(</span><em>X</em>, <em>y</em>, <em>order='first'</em><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.rba.RobustBiasAwareClassifier.feature_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute first-order moment feature statistics.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X</strong> : array</p>
+<blockquote>
+<div><p>dataset (N samples by D features)</p>
+</div></blockquote>
+<p><strong>y</strong> : array</p>
+<blockquote>
+<div><p>label vector (N samples by 1)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">array</p>
+<blockquote class="last">
+<div><p>array containing label vector, feature moments and 1-augmentation.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libtlda.rba.RobustBiasAwareClassifier.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y</em>, <em>Z</em><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.rba.RobustBiasAwareClassifier.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit/train a robust bias-aware classifier.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X</strong> : array</p>
+<blockquote>
+<div><p>source data (N samples by D features)</p>
+</div></blockquote>
+<p><strong>y</strong> : array</p>
+<blockquote>
+<div><p>source labels (N samples by 1)</p>
+</div></blockquote>
+<p><strong>Z</strong> : array</p>
+<blockquote>
+<div><p>target data (M samples by D features)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libtlda.rba.RobustBiasAwareClassifier.get_params">
+<code class="descname">get_params</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.rba.RobustBiasAwareClassifier.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get classifier parameters.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libtlda.rba.RobustBiasAwareClassifier.is_trained">
+<code class="descname">is_trained</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.rba.RobustBiasAwareClassifier.is_trained" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether classifier is trained.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libtlda.rba.RobustBiasAwareClassifier.iwe_kernel_densities">
+<code class="descname">iwe_kernel_densities</code><span class="sig-paren">(</span><em>X</em>, <em>Z</em><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.rba.RobustBiasAwareClassifier.iwe_kernel_densities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate importance weights based on kernel density estimation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X</strong> : array</p>
+<blockquote>
+<div><blockquote>
+<div><p>source data (N samples by D features)</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>Z <span class="classifier-delimiter">:</span> <span class="classifier">array</span></dt>
+<dd><p class="first last">target data (M samples by D features)</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">array</p>
+<blockquote class="last">
+<div><p>importance weights (N samples by 1)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libtlda.rba.RobustBiasAwareClassifier.posterior">
+<code class="descname">posterior</code><span class="sig-paren">(</span><em>psi</em><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.rba.RobustBiasAwareClassifier.posterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class-posterior estimation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>psi</strong> : array</p>
+<blockquote>
+<div><p>weighted data-classifier output (N samples by K classes)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pyx</strong> : array</p>
+<blockquote class="last">
+<div><p>class-posterior estimation (N samples by K classes)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libtlda.rba.RobustBiasAwareClassifier.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>Z</em><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.rba.RobustBiasAwareClassifier.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make predictions on new dataset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>Z</strong> : array</p>
+<blockquote>
+<div><p>new data set (M samples by D features)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>preds</strong> : array</p>
+<blockquote class="last">
+<div><p>label predictions (M samples by 1)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libtlda.rba.RobustBiasAwareClassifier.psi">
+<code class="descname">psi</code><span class="sig-paren">(</span><em>X</em>, <em>theta</em>, <em>w</em>, <em>K=2</em><span class="sig-paren">)</span><a class="headerlink" href="#libtlda.rba.RobustBiasAwareClassifier.psi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute psi function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X</strong> : array</p>
+<blockquote>
+<div><p>data set (N samples by D features)</p>
+</div></blockquote>
+<p><strong>theta</strong> : array</p>
+<blockquote>
+<div><p>classifier parameters (D features by 1)</p>
+</div></blockquote>
+<p><strong>w</strong> : array</p>
+<blockquote>
+<div><p>importance-weights (N samples by 1)</p>
+</div></blockquote>
+<p><strong>K</strong> : int</p>
+<blockquote>
+<div><p>number of classes (def: 2)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>psi</strong> : array</p>
+<blockquote class="last">
+<div><p>array with psi function values (N samples by K classes)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="scl.html" class="btn btn-neutral float-right" title="Structural Correspondence Learner" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="suba.html" class="btn btn-neutral" title="Subspace Aligned Classifier" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Wouter M. Kouw.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1.5',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

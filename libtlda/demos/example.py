@@ -36,7 +36,7 @@ from libtlda.tcpr import TargetContrastivePessimisticClassifier
 
 """Select adaptive classifier"""
 
-classifier = 'tcpr'
+classifier = 'scl'
 viz = False
 
 """Generate synthetic data set"""
@@ -109,7 +109,7 @@ elif classifier == 'flda':
 
 elif classifier == 'tcpr':
     # Target Contrastive Pessimistic Classifier
-    clf = TargetContrastivePessimisticClassifier(l2=0.1, tolerance=1e-20)
+    clf = TargetContrastivePessimisticClassifier(l2=0.1)
 
 else:
     raise ValueError('Classifier not recognized.')

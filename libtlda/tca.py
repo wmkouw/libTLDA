@@ -26,17 +26,35 @@ class TransferComponentClassifier(object):
         """
         Select a particular type of transfer component classifier.
 
-        INPUT   (1) str 'loss': loss function for weighted classifier, options:
-                    'logistic', 'quadratic', 'hinge' (def: 'logistic')
-                (2) float 'l2': l2-regularization parameter value (def:0.01)
-                (3) float 'mu': trade-off parameter (def: 1.0)
-                (4) int 'num_components': number of transfer components to
-                    maintain (def: 1)
-                (5) str 'kernel_type': type of kernel to use, options: 'rbf'
-                    (def: 'rbf')
-                (6) float 'bandwidth': kernel bandwidth for transfer component
-                    analysis (def: 1.0)
-                (7) float 'order': order of polynomial for kernel (def: 2.0)
+        Parameters
+        ----------
+        loss : str
+            loss function for weighted classifier, options: 'logistic',
+            'quadratic', 'hinge' (def: 'logistic')
+        l2 : float
+            l2-regularization parameter value (def:0.01)
+        mu : float
+            trade-off parameter (def: 1.0)
+        num_components : int
+            number of transfer components to maintain (def: 1)
+        kernel_type : str
+            type of kernel to use, options: 'rbf' (def: 'rbf')
+        bandwidth : float
+            kernel bandwidth for transfer component analysis (def: 1.0)
+        order : float
+            order of polynomial for kernel (def: 2.0)
+
+        Returns
+        -------
+        None
+
+        Attributes
+        ----------
+        loss
+            which loss function to use
+        is_trained
+            whether the classifier has been trained on data already
+
         """
         self.loss = loss
         self.l2 = l2
@@ -77,21 +95,33 @@ class TransferComponentClassifier(object):
         """
         Compute kernel for given data set.
 
-        INPUT   (1) array 'X': data set (N samples by D features)
-                (2) array 'Z': data set (M samples by D features)
-                (3) str 'type': type of kernel, options: 'linear',
-                    'polynomial', 'rbf', 'sigmoid' (def: 'linear')
-                (4) float 'order': order of polynomial to use for the
-                    polynomial kernel (def: 2.0)
-                (5) float 'bandwidth': kernel bandwidth (def: 1.0)
-        OUTPUT  (1) array: kernel matrix (N+M by N+M)
+        Parameters
+        ----------
+        X : array
+            data set (N samples by D features)
+        Z : array
+            data set (M samples by D features)
+        type : str
+            type of kernel, options: 'linear', 'polynomial', 'rbf',
+            'sigmoid' (def: 'linear')
+        order : float
+            degree for the polynomial kernel (def: 2.0)
+        bandwidth : float
+            kernel bandwidth (def: 1.0)
+
+        Returns
+        -------
+        array
+            kernel matrix (N+M by N+M)
+
         """
         # Data shapes
         N, DX = X.shape
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Select type of kernel to compute
         if type == 'linear':
@@ -107,24 +137,34 @@ class TransferComponentClassifier(object):
             # Sigmoidal kernel
             return 1./(1 + np.exp(np.dot(X, Z.T)))
         else:
-            raise NotImplementedError
+            raise NotImplementedError('Loss not implemented yet.')
 
     def transfer_component_analysis(self, X, Z):
         """
         Transfer Component Analysis.
 
-        INPUT   (1) array 'X': source data set (N samples by D features)
-                (2) array 'Z': target data set (M samples by D features)
-        OUTPUT  (1) array 'C': transfer components (D features
-                    by num_components)
-                (2) array 'K': source and target data kernel distances
+        Parameters
+        ----------
+        X : array
+            source data set (N samples by D features)
+        Z : array
+            target data set (M samples by D features)
+
+        Returns
+        -------
+        C : array
+            transfer components (D features by num_components)
+        K : array
+            source and target data kernel distances
+
         """
         # Data shapes
         N, DX = X.shape
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Compute kernel matrix
         XZ = np.concatenate((X, Z), axis=0)
@@ -169,20 +209,33 @@ class TransferComponentClassifier(object):
         """
         Fit/train a classifier on data mapped onto transfer components.
 
-        INPUT   (1) array 'X': source data (N samples by D features)
-                (2) array 'y': source labels (N samples by 1)
-                (3) array 'Z': target data (M samples by D features)
-        OUTPUT
+        Parameters
+        ----------
+        X : array
+            source data (N samples by D features)
+        y : array
+            source labels (N samples by 1)
+        Z : array
+            target data (M samples by D features)
+
+        Returns
+        -------
+        None
+
         """
         # Data shapes
         N, DX = X.shape
         M, DZ = Z.shape
 
         # Assert equivalent dimensionalities
-        assert DX == DZ
+        if not DX == DZ:
+            raise ValueError('Dimensionalities of X and Z should be equal.')
 
         # Assert correct number of components for given dataset
-        assert self.num_components <= N + M - 1
+        if not self.num_components <= N + M - 1:
+            raise ValueError('''Number of components must be smaller than or
+                             equal to the source sample size plus target sample
+                             size plus 1.''')
 
         # Maintain source and target data for later kernel computations
         self.XZ = np.concatenate((X, Z), axis=0)
@@ -205,7 +258,7 @@ class TransferComponentClassifier(object):
             self.clf.fit(X, y)
         else:
             # Other loss functions are not implemented
-            raise NotImplementedError
+            raise NotImplementedError('Loss not implemented yet.')
 
         # Mark classifier as trained
         self.is_trained = True
@@ -213,29 +266,39 @@ class TransferComponentClassifier(object):
         # Store training data dimensionality
         self.train_data_dim = DX
 
-    def predict(self, Z_):
+    def predict(self, Z):
         """
         Make predictions on new dataset.
 
-        INPUT   (1) array 'Z_': new data set (M samples by D features)
-        OUTPUT  (2) array 'preds': label predictions (M samples by 1)
+        Parameters
+        ----------
+        Z : array
+            new data set (M samples by D features)
+
+        Returns
+        -------
+        preds : array
+            label predictions (M samples by 1)
+
         """
         # Data shape
-        M, D = Z_.shape
+        M, D = Z.shape
 
         # If classifier is trained, check for same dimensionality
         if self.is_trained:
-            assert self.train_data_dim == D
+            if not self.train_data_dim == D:
+                raise ValueError('''Test data is of different dimensionality
+                                 than training data.''')
 
         # Compute kernel for new data
-        K = self.kernel(Z_, self.XZ, type=self.kernel_type,
+        K = self.kernel(Z, self.XZ, type=self.kernel_type,
                         bandwidth=self.bandwidth, order=self.order)
 
         # Map new data onto transfer components
-        Z_ = np.dot(K, self.C)
+        Z = np.dot(K, self.C)
 
         # Call scikit's predict function
-        preds = self.clf.predict(Z_)
+        preds = self.clf.predict(Z)
 
         # For quadratic loss function, correct predictions
         if self.loss == 'quadratic':

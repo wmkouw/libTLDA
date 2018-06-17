@@ -37,30 +37,30 @@ conda env create -f environment.yml
 source activate libtlda
 ```
 
-### Usage
+#### Usage
 
-Libtlda follows a similar structure as [scikit-learn](http://scikit-learn.org/). Each type of adaptive classifier is a submodule, from which the classifiers can be imported. For instance:
+LibTLDA follows a similar structure as [scikit-learn](http://scikit-learn.org/). There are several classes of classifiers that can be imported through for instance:
+
 ```python
 from libtlda.iw import ImportanceWeightedClassifier
 ```
-From there on, training is a matter of calling the `fit` method on your labeled source dataset `(X,y)` and unlabeled target dataset `Z`. For example:
+
+With a data set of labeled source samples `(X,y)` and unlabeled target samples `Z`, the classifier can be called and trained using:
+
 ```python
-classifier = ImportanceWeightedClassifier().fit(X, y, Z)
+clf = ImportanceWeightedClasssifier().fit(X, y, Z)
 ```
 
-Predictions can be made by calling the `predict` method:
+Given a trained classifier, predictions can be made as follows:
 ```python
-preds = classifier.predict(Z)
+predictions = clf.predict(Z)
 ```
 
-Documentation will be improved soon. For now, have a look at the `example.py` script. It shows a couple of options for training adaptive classifiers.
-
-<!-- ### Python-specific classifiers
-- dann: Domain-Adversarial Neural Network (Ganin et al., 2015) (TODO) -->
+Check the documentation for more information on specific classes, methods and functions.
 
 ## Matlab
 
-### Installation:
+#### Installation:
 
 First clone the repository and change directory to matlab:
 ```shell
@@ -68,12 +68,12 @@ git clone https://github.com/wmkouw/libTLDA
 cd libTLDA/matlab/
 ```
 
-In the matlab command window, call the installation script. It downloads all dependencies ([minFunc](https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html), [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvm/)) and adds them - along with `libtlda` - to your path:
+In the matlab command window, call the installation script. It downloads all dependencies ([minFunc](https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html), [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvm/)) and adds them, along with `libtlda`, to your path:
 ```MATLAB
 install.m
 ```
 
-### Usage
+#### Usage
 
 There is an example script that can be edited to test the different classifiers:
 ```MATLAB

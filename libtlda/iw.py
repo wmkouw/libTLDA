@@ -20,6 +20,16 @@ class ImportanceWeightedClassifier(object):
 
     Methods contain different importance-weight estimators and different loss
     functions.
+
+    Examples
+    --------
+    | >>>> X = np.random.randn(10, 2)
+    | >>>> y = np.vstack((-np.ones((5,)), np.ones((5,))))
+    | >>>> Z = np.random.randn(10, 2)
+    | >>>> clf = ImportanceWeightedClassifier()
+    | >>>> clf.fit(X, y, Z)
+    | >>>> u_pred = clf.predict(Z)
+
     """
 
     def __init__(self, loss='logistic', l2=1.0, iwe='lr', smoothing=True,
@@ -53,10 +63,6 @@ class ImportanceWeightedClassifier(object):
         Returns
         -------
         None
-
-        Examples
-        --------
-        >>>> clf = ImportanceWeightedClassifier()
 
         """
         self.loss = loss
@@ -102,13 +108,6 @@ class ImportanceWeightedClassifier(object):
         -------
         iw : array
             importance weights (N samples by 1)
-
-        Examples
-        --------
-        X = np.random.randn(10, 2)
-        Z = np.random.randn(10, 2)
-        clf = ImportanceWeightedClassifier()
-        iw = clf.iwe_ratio_gaussians(X, Z)
 
         """
         # Data shapes
@@ -168,15 +167,8 @@ class ImportanceWeightedClassifier(object):
 
         Returns
         -------
-        iw : array
+        array
             importance weights (N samples by 1)
-
-        Examples
-        --------
-        X = np.random.randn(10, 2)
-        Z = np.random.randn(10, 2)
-        clf = ImportanceWeightedClassifier()
-        iw = clf.iwe_kernel_densities(X, Z)
 
         """
         # Data shapes
@@ -213,15 +205,8 @@ class ImportanceWeightedClassifier(object):
 
         Returns
         -------
-        iw : array
+        array
             importance weights (N samples by 1)
-
-        Examples
-        --------
-        X = np.random.randn(10, 2)
-        Z = np.random.randn(10, 2)
-        clf = ImportanceWeightedClassifier()
-        iw = clf.iwe_logistic_discrimination(X, Z)
 
         """
         # Data shapes
@@ -263,13 +248,6 @@ class ImportanceWeightedClassifier(object):
         -------
         iw : array
             importance weights (N samples by 1)
-
-        Examples
-        --------
-        X = np.random.randn(10, 2)
-        Z = np.random.randn(10, 2)
-        clf = ImportanceWeightedClassifier()
-        iw = clf.iwe_nearest_neighbours(X, Z)
 
         """
         # Data shapes
@@ -313,13 +291,6 @@ class ImportanceWeightedClassifier(object):
         -------
         iw : array
             importance weights (N samples by 1)
-
-        Examples
-        --------
-        X = np.random.randn(10, 2)
-        Z = np.random.randn(10, 2)
-        clf = ImportanceWeightedClassifier()
-        iw = clf.iwe_kernel_mean_matching(X, Z)
 
         """
         # Data shapes
@@ -368,7 +339,8 @@ class ImportanceWeightedClassifier(object):
         """
         Fit/train an importance-weighted classifier.
 
-        Arguments
+        Parameters
+        ----------
         X : array
             source data (N samples by D features)
         y : array
@@ -379,14 +351,6 @@ class ImportanceWeightedClassifier(object):
         Returns
         -------
         None
-
-        Examples
-        --------
-        X = np.random.randn(10, 2)
-        y = np.vstack((-np.ones((5,)), np.ones((5,))))
-        Z = np.random.randn(10, 2)
-        clf = ImportanceWeightedClassifier()
-        clf.fit(X, y, Z)
 
         """
         # Data shapes
@@ -431,13 +395,13 @@ class ImportanceWeightedClassifier(object):
         # Store training data dimensionality
         self.train_data_dim = DX
 
-    def predict(self, Z_):
+    def predict(self, Z):
         """
         Make predictions on new dataset.
 
-        Arguments
-        ---------
-        Z_ : array
+        Parameters
+        ----------
+        Z : array
             new data set (M samples by D features)
 
         Returns
@@ -445,18 +409,9 @@ class ImportanceWeightedClassifier(object):
         preds : array
             label predictions (M samples by 1)
 
-        Examples
-        --------
-        X = np.random.randn(10, 2)
-        y = np.vstack((-np.ones((5,)), np.ones((5,))))
-        Z = np.random.randn(10, 2)
-        clf = ImportanceWeightedClassifier()
-        clf.fit(X, y, Z)
-        u_pred = clf.predict(Z)
-
         """
         # Data shape
-        M, D = Z_.shape
+        M, D = Z.shape
 
         # If classifier is trained, check for same dimensionality
         if self.is_trained:
@@ -465,7 +420,7 @@ class ImportanceWeightedClassifier(object):
                                  than training data.''')
 
         # Call scikit's predict function
-        preds = self.clf.predict(Z_)
+        preds = self.clf.predict(Z)
 
         # For quadratic loss function, correct predictions
         if self.loss == 'quadratic':
