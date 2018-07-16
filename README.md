@@ -48,7 +48,8 @@ from libtlda.iw import ImportanceWeightedClassifier
 With a data set of labeled source samples `(X,y)` and unlabeled target samples `Z`, the classifier can be called and trained using:
 
 ```python
-clf = ImportanceWeightedClasssifier().fit(X, y, Z)
+clf = ImportanceWeightedClassifier()
+clf.fit(X, y, Z)
 ```
 
 Given a trained classifier, predictions can be made as follows:
