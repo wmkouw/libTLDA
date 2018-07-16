@@ -228,7 +228,7 @@ class ImportanceWeightedClassifier(object):
         lr = LogisticRegression(C=self.l2)
 
         # Predict probability of belonging to target using cross-validation
-        preds = cross_val_predict(lr, XZ, y[:, 0])
+        preds = cross_val_predict(lr, XZ, y[:, 0], method='predict_proba')[:,1]
 
         # Return predictions for source samples
         return preds[:N]
@@ -425,6 +425,36 @@ class ImportanceWeightedClassifier(object):
         # For quadratic loss function, correct predictions
         if self.loss == 'quadratic':
             preds = (np.sign(preds)+1)/2.
+
+        # Return predictions array
+        return preds
+
+    def predict_proba(self, Z):
+        """
+        Make predictions on new dataset.
+
+        Parameters
+        ----------
+        Z : array
+            new data set (M samples by D features)
+
+        Returns
+        -------
+        preds : array
+            label predictions (M samples by 1)
+
+        """
+        # Data shape
+        M, D = Z.shape
+
+        # If classifier is trained, check for same dimensionality
+        if self.is_trained:
+            if not self.train_data_dim == D:
+                raise ValueError('''Test data is of different dimensionality
+                                 than training data.''')
+
+        # Call scikit's predict function
+        preds = self.clf.predict_proba(Z)
 
         # Return predictions array
         return preds
