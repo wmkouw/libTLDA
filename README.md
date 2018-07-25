@@ -1,6 +1,6 @@
 # libTLDA
 
-[![Coverage](https://scrutinizer-ci.com/g/wmkouw/libTLDA/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/wmkouw/libTLDA/statistics/) [![BuildStatus](https://travis-ci.org/wmkouw/libTLDA.svg?branch=master)](https://travis-ci.org/wmkouw/libTLDA) ![Python version](https://img.shields.io/badge/python-2.7%2C%203.4%2C%203.5%2C%203.6-blue.svg) ![Matlab version](https://img.shields.io/badge/matlab-R2017a-blue.svg) [![DOI](https://zenodo.org/badge/41360294.svg)](https://zenodo.org/badge/latestdoi/41360294)
+[![Coverage](https://scrutinizer-ci.com/g/wmkouw/libTLDA/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/wmkouw/libTLDA/statistics/) [![BuildStatus](https://travis-ci.org/wmkouw/libTLDA.svg?branch=master)](https://travis-ci.org/wmkouw/libTLDA) [![docs](https://media.readthedocs.org/static/projects/badges/passing-flat.svg)](https://libtlda.readthedocs.io/en/latest/) [![DOI](https://zenodo.org/badge/41360294.svg)](https://zenodo.org/badge/latestdoi/41360294)
 
 ## Library of transfer learners and domain-adaptive classifiers.
 This package contains the following classifiers:
@@ -23,6 +23,7 @@ This package contains the following classifiers:
 - Geodesic Flow Kernel [(Gong et al., 2012)](https://dl.acm.org/citation.cfm?id=1610094)
 
 ## Python
+![Python version](https://img.shields.io/badge/python-2.7%2C%203.4%2C%203.5%2C%203.6-blue.svg)
 
 #### Installation
 
@@ -59,6 +60,7 @@ predictions = clf.predict(Z)
 Check the [documentation](https://libtlda.readthedocs.io/en/latest/) for more information on specific classes, methods and functions.
 
 ## Matlab
+![Matlab version](https://img.shields.io/badge/matlab-R2017a-blue.svg)
 
 #### Installation:
 
