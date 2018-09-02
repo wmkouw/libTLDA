@@ -376,15 +376,11 @@ class ImportanceWeightedClassifier(object):
             raise NotImplementedError('Estimator not implemented.')
 
         # Train a weighted classifier
-        if self.loss == 'logistic':
-            # Logistic regression model with sample weights
+        if self.loss in ['logistic', 'quadratic', 'hinge']:
+
+            # Fit classifier with sample weights
             self.clf.fit(X, y, w)
-        elif self.loss == 'quadratic':
-            # Least-squares model with sample weights
-            self.clf.fit(X, y, w)
-        elif self.loss == 'hinge':
-            # Linear support vector machine with sample weights
-            self.clf.fit(X, y, w)
+
         else:
             # Other loss functions are not implemented
             raise NotImplementedError('Loss function not implemented.')
@@ -428,6 +424,43 @@ class ImportanceWeightedClassifier(object):
 
         # Return predictions array
         return preds
+
+    def predict_proba(self, Z):
+        """
+        Compute posterior probabilities on new dataset.
+
+        Parameters
+        ----------
+        Z : array
+            new data set (M samples by D features)
+
+        Returns
+        -------
+        probs : array
+            label predictions (M samples by K)
+
+        """
+        # Data shape
+        M, D = Z.shape
+
+        # If classifier is trained, check for same dimensionality
+        if self.is_trained:
+            if not self.train_data_dim == D:
+                raise ValueError('''Test data is of different dimensionality
+                                 than training data.''')
+
+        # Call scikit's predict function
+        if self.loss in ['logistic']:
+
+            # Use scikit's predict_proba for posterior probabilities
+            probs = self.clf.predict_proba(Z)
+
+        else:
+            raise NotImplementedError('''Posterior probabilities for quadratic
+                                      and hinge losses not implemented yet.''')
+
+        # Return posterior probabilities array
+        return probs
 
     def get_params(self):
         """Get classifier parameters."""

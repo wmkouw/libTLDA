@@ -25,7 +25,8 @@ class RobustBiasAwareClassifier(object):
     """
 
     def __init__(self, l2=0.0, order='first', gamma=1.0, tau=1e-5,
-                 max_iter=100, clip=1000, verbose=True):
+                 learning_rate=1.0, rate_decay='linear', max_iter=100,
+                 clip=1000, verbose=True):
         """
         Set classifier instance parameters.
 
@@ -40,6 +41,12 @@ class RobustBiasAwareClassifier(object):
             decaying learning rate (def: 1.0)
         tau : float
             convergence threshold (def: 1e-5)
+        learning_rate : float
+            learning rate starting value (def: 1.0)
+        rate_decay : str
+            how fast the learning rate decays over iterations,
+            options: 'linear', 'quadratic', 'geometric', 'exponential'
+            (def: linear)
         max_iter : int
             maximum number of iterations (def: 100)
         clip : float
@@ -56,6 +63,8 @@ class RobustBiasAwareClassifier(object):
         self.order = order
         self.gamma = gamma
         self.tau = tau
+        self.learning_rate = learning_rate
+        self.rate_decay = rate_decay
         self.max_iter = max_iter
         self.clip = clip
 
@@ -114,16 +123,18 @@ class RobustBiasAwareClassifier(object):
         # Concatenate label vector, moments, and ones-augmentation
         return np.concatenate((y, mom, np.ones((N, 1))), axis=1)
 
-    def iwe_kernel_densities(self, X, Z):
+    def iwe_kernel_densities(self, X, Z, clip=1000):
         """
         Estimate importance weights based on kernel density estimation.
 
         Parameters
         ----------
-            X : array
-                source data (N samples by D features)
-            Z : array
-                target data (M samples by D features)
+        X : array
+            source data (N samples by D features)
+        Z : array
+            target data (M samples by D features)
+        clip : float
+            maximum allowed value for individual weights (def: 1000)
 
         Returns
         -------
@@ -146,8 +157,11 @@ class RobustBiasAwareClassifier(object):
         assert not np.any(np.isnan(pT)) or np.any(pT == 0)
         assert not np.any(np.isnan(pS)) or np.any(pS == 0)
 
-        # Take the ratio of probabilities
-        return pT / pS
+        # Compute importance weights
+        iw = pT / pS
+
+        # Clip importance weights
+        return np.minimum(clip, np.maximum(0, iw))
 
     def psi(self, X, theta, w, K=2):
         """
@@ -217,6 +231,47 @@ class RobustBiasAwareClassifier(object):
             pyx[:, k] = np.exp(psi[:, k]) / np.sum(np.exp(psi), axis=1)
 
         return pyx
+
+    def learning_rate_t(self, t):
+        """
+        Compute current learning rate after decay.
+
+        Parameters
+        ----------
+        t : int
+            current iteration
+
+        Returns
+        -------
+        alpha : float
+            current learning rate
+
+        """
+        # Select rate decay
+        if self.rate_decay == 'linear':
+
+            # Linear dropoff between t=0 and t=T
+            alpha = (self.max_iter - t)/(self.learning_rate*self.max_iter)
+
+        elif self.rate_decay == 'quadratic':
+
+            # Quadratic dropoff between t=0 and t=T
+            alpha = ((self.max_iter - t)/(self.learning_rate*self.max_iter))**2
+
+        elif self.rate_decay == 'geometric':
+
+            # Drop rate off inversely to time
+            alpha = 1 / (self.learning_rate * t)
+
+        elif self.rate_decay == 'exponential':
+
+            # Exponential dropoff
+            alpha = np.exp(-self.learning_rate * t)
+
+        else:
+            raise ValueError('Rate decay type unknown.')
+
+        return alpha
 
     def fit(self, X, y, Z):
         """
@@ -292,8 +347,11 @@ class RobustBiasAwareClassifier(object):
             # Gradient computation and regularization
             dL = c - np.mean(pfs, axis=0) + self.l2*2*theta
 
+            # Compute learning rate
+            alpha = self.learning_rate_t(t)
+
             # Apply learning rate to gradient
-            dT = dL / (t * self.gamma)
+            dT = alpha * dL
 
             # Update classifier parameters
             theta += dT
@@ -302,10 +360,10 @@ class RobustBiasAwareClassifier(object):
             if self.verbose:
                 if (t % (self.max_iter / 10)) == 1:
                     print('Iteration {:03}/{:03} - Norm gradient: {:.12}'
-                          .format(t, self.max_iter, np.linalg.norm(dL)))
+                          .format(t, self.max_iter, np.linalg.norm(dT)))
 
             # Check for convergence
-            if (np.linalg.norm(dL) <= self.tau):
+            if (np.linalg.norm(dT) <= self.tau):
                 print('Broke at {}'.format(t))
                 break
 
@@ -345,17 +403,44 @@ class RobustBiasAwareClassifier(object):
                 raise ValueError('''Test data is of different dimensionality
                                  than training data.''')
 
+        # Compute posteriors
+        post = self.predict_proba(Z)
+
+        # Predictions through max-posteriors
+        preds = np.argmax(post, axis=1)
+
+        # Map predictions back to original labels
+        return self.classes[preds]
+
+    def predict_proba(self, Z):
+        """
+        Compute posteriors on new dataset.
+
+        Parameters
+        ----------
+        Z : array
+            new data set (M samples by D features)
+
+        Returns
+        -------
+        preds : array
+            label predictions (M samples by 1)
+
+        """
+        # Data shape
+        M, D = Z.shape
+
+        # If classifier is trained, check for same dimensionality
+        if self.is_trained:
+            if not self.train_data_dim == D:
+                raise ValueError('''Test data is of different dimensionality
+                                 than training data.''')
+
         # Calculate psi function for target samples
         psi = self.psi(Z, self.theta.T, np.ones((M, 1)), K=self.K)
 
         # Compute posteriors for target samples
-        pyz = self.posterior(psi)
-
-        # Predictions through max-posteriors
-        preds = np.argmax(pyz, axis=1)
-
-        # Map predictions back to original labels
-        return self.classes[preds]
+        return self.posterior(psi)
 
     def get_params(self):
         """Get classifier parameters."""
