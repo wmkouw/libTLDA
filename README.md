@@ -1,6 +1,6 @@
 # libTLDA
 
-[![Coverage](https://scrutinizer-ci.com/g/wmkouw/libTLDA/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/wmkouw/libTLDA/statistics/) [![BuildStatus](https://travis-ci.org/wmkouw/libTLDA.svg?branch=master)](https://travis-ci.org/wmkouw/libTLDA) [![docs](https://media.readthedocs.org/static/projects/badges/passing-flat.svg)](https://libtlda.readthedocs.io/en/latest/) [![DOI](https://zenodo.org/badge/41360294.svg)](https://zenodo.org/badge/latestdoi/41360294)
+[![Coverage](https://scrutinizer-ci.com/g/wmkouw/libTLDA/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/wmkouw/libTLDA/statistics/) [![BuildStatus](https://travis-ci.org/wmkouw/libTLDA.svg?branch=master)](https://travis-ci.org/wmkouw/libTLDA) [![docs](https://readthedocs.org/projects/libtlda/badge/?version=latest)](https://libtlda.readthedocs.io/en/latest/) [![DOI](https://zenodo.org/badge/41360294.svg)](https://zenodo.org/badge/latestdoi/41360294)
 
 ## Library of transfer learners and domain-adaptive classifiers.
 This package contains the following classifiers:
