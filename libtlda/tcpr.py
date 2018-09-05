@@ -112,12 +112,15 @@ class TargetContrastivePessimisticClassifier(object):
         N, D = X.shape
 
         # Find which column contains the intercept
-        intercept_index = np.argwhere(np.sum(X, axis=0) == N)
+        intercept_index = []
+        for d in range(D):
+            if np.all(X[:, d] == 0):
+                intercept_index.append(d)
 
-        # Swap intercept to last
+        # Remove intercept columns
         X = X[:, np.setdiff1d(np.arange(D), intercept_index)]
 
-        return X, D-1
+        return X, D-len(intercept_index)
 
     def project_simplex(self, v, z=1.0):
         """
@@ -581,7 +584,7 @@ class TargetContrastivePessimisticClassifier(object):
     def predict(self, Z_):
         """
         Make predictions on new dataset.
-        
+
         Parameters
         ----------
         Z : array
@@ -615,6 +618,44 @@ class TargetContrastivePessimisticClassifier(object):
 
         # Return predictions array
         return preds
+
+    def predict_proba(self, Z):
+        """
+        Compute posteriors on new dataset.
+
+        Parameters
+        ----------
+        Z : array
+            new data set (M samples by D features)
+
+        Returns
+        -------
+        preds : array
+            label predictions (M samples by 1)
+
+        """
+        # Data shape
+        M, D = Z.shape
+
+        # If classifier is trained, check for same dimensionality
+        if self.is_trained:
+            if not self.train_data_dim == D:
+                raise ValueError('''Test data is of different dimensionality
+                                 than training data.''')
+
+        if self.loss in ['lda', 'qda']:
+
+            # Compute probabilities under each distribution
+            nLL = self.neg_log_likelihood(Z, self.parameters)
+
+            # Compute likelihood
+            probs = np.exp(-nLL)
+
+        else:
+            raise NotImplementedError('Loss function not implemented yet.')
+
+        # Return posterior probabilities
+        return probs
 
     def get_params(self):
         """Return classifier parameters."""
