@@ -228,7 +228,7 @@ class ImportanceWeightedClassifier(object):
         lr = LogisticRegression(C=self.l2)
 
         # Predict probability of belonging to target using cross-validation
-        preds = cross_val_predict(lr, XZ, y[:, 0])
+        preds = cross_val_predict(lr, XZ, y[:, 0], method='predict_proba')[:,1]
 
         # Return predictions for source samples
         return preds[:N]
