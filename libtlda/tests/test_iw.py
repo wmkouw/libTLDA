@@ -2,6 +2,7 @@ import numpy as np
 import numpy.random as rnd
 
 from libtlda.iw import ImportanceWeightedClassifier
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 
 
 def test_init():
@@ -56,12 +57,31 @@ def test_iwe_nearest_neighbours():
     assert np.all(iw >= 0)
 
 
+def test_regularization():
+    """Test for fitting the model."""
+    X = rnd.randn(10, 2)
+    y = np.hstack((-np.ones((5,)), np.ones((5,))))
+    Z = rnd.randn(10, 2) + 1
+    clf = ImportanceWeightedClassifier(loss_function='lr',
+                                       l2_regularization=None)
+    assert isinstance(clf.clf, LogisticRegressionCV)
+    clf = ImportanceWeightedClassifier(loss_function='lr',
+                                       l2_regularization=1.0)
+    assert isinstance(clf.clf, LogisticRegression)
+
+
 def test_fit():
     """Test for fitting the model."""
     X = rnd.randn(10, 2)
     y = np.hstack((-np.ones((5,)), np.ones((5,))))
     Z = rnd.randn(10, 2) + 1
-    clf = ImportanceWeightedClassifier()
+    clf = ImportanceWeightedClassifier(loss_function='lr')
+    clf.fit(X, y, Z)
+    assert clf.is_trained
+    clf = ImportanceWeightedClassifier(loss_function='qd')
+    clf.fit(X, y, Z)
+    assert clf.is_trained
+    clf = ImportanceWeightedClassifier(loss_function='hinge')
     clf.fit(X, y, Z)
     assert clf.is_trained
 

@@ -6,7 +6,8 @@ import scipy.stats as st
 from scipy.spatial.distance import cdist
 import sklearn as sk
 from sklearn.svm import LinearSVC
-from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, \
+    RidgeClassifier, RidgeClassifierCV
 from sklearn.model_selection import cross_val_predict
 from os.path import basename
 from cvxopt import matrix, solvers
@@ -32,8 +33,9 @@ class ImportanceWeightedClassifier(object):
 
     """
 
-    def __init__(self, loss='logistic', l2=1.0, iwe='lr', smoothing=True,
-                 clip=-1, kernel_type='rbf', bandwidth=1):
+    def __init__(self, loss_function='logistic', l2_regularization=None,
+                 weight_estimator='lr', smoothing=True, clip_max_value=-1,
+                 kernel_type='rbf', bandwidth=1):
         """
         Select a particular type of importance-weighted classifier.
 
@@ -42,7 +44,7 @@ class ImportanceWeightedClassifier(object):
         loss : str
             loss function for weighted classifier, options: 'logistic',
             'quadratic', 'hinge' (def: 'logistic')
-        l2 : float
+        l2_regularization : float
             l2-regularization parameter value (def:0.01)
         iwe : str
             importance weight estimator, options: 'lr', 'nn', 'rg', 'kmm',
@@ -65,33 +67,48 @@ class ImportanceWeightedClassifier(object):
         None
 
         """
-        self.loss = loss
-        self.l2 = l2
-        self.iwe = iwe
+        self.loss = loss_function
+        self.l2 = l2_regularization
+        self.iwe = weight_estimator
         self.smoothing = smoothing
-        self.clip = clip
+        self.clip = clip_max_value
         self.kernel_type = kernel_type
         self.bandwidth = bandwidth
 
         # Initialize untrained classifiers based on choice of loss function
-        if self.loss == 'logistic':
-            # Logistic regression model
-            self.clf = LogisticRegression()
-        elif self.loss == 'quadratic':
-            # Least-squares model
-            self.clf = LinearRegression()
-        elif self.loss == 'hinge':
+        if self.loss in ('lr', 'logr', 'logistic'):
+
+            if l2_regularization:
+
+                # Logistic regression model
+                self.clf = LogisticRegression(C=self.l2, solver='lbfgs')
+
+            else:
+                # Logistic regression model
+                self.clf = LogisticRegressionCV(cv=5, solver='lbfgs')
+
+        elif self.loss in ('squared', 'qd', 'quadratic'):
+
+            if l2_regularization:
+
+                # Least-squares model with fixed regularization
+                self.clf = RidgeClassifier(alpha=self.l2)
+
+            else:
+                # Least-squares model, cross-validated for regularization
+                self.clf = RidgeClassifierCV(cv=5)
+
+        elif self.loss in ('hinge', 'linsvm', 'linsvc'):
+
             # Linear support vector machine
             self.clf = LinearSVC()
+
         else:
             # Other loss functions are not implemented
             raise NotImplementedError('Loss function not implemented.')
 
         # Whether model has been trained
         self.is_trained = False
-
-        # Dimensionality of training data
-        self.train_data_dim = ''
 
         # Initalize empty weight attribute
         self.iw = []
@@ -228,10 +245,15 @@ class ImportanceWeightedClassifier(object):
         XZ = np.concatenate((X, Z), axis=0)
 
         # Call a logistic regressor
-        lr = LogisticRegression(C=self.l2)
+        if self.l2:
+
+            lr = LogisticRegression(C=self.l2, solver='lbfgs')
+
+        else:
+            lr = LogisticRegressionCV(cv=5, solver='lbfgs')
 
         # Predict probability of belonging to target using cross-validation
-        preds = cross_val_predict(lr, XZ, y[:, 0])
+        preds = cross_val_predict(lr, XZ, y[:, 0], cv=5)
 
         # Return predictions for source samples
         return preds[:N]
@@ -379,14 +401,7 @@ class ImportanceWeightedClassifier(object):
             raise NotImplementedError('Estimator not implemented.')
 
         # Train a weighted classifier
-        if self.loss in ['logistic', 'quadratic', 'hinge']:
-
-            # Fit classifier with sample weights
-            self.clf.fit(X, y, self.iw)
-
-        else:
-            # Other loss functions are not implemented
-            raise NotImplementedError('Loss function not implemented.')
+        self.clf.fit(X, y, self.iw)
 
         # Mark classifier as trained
         self.is_trained = True

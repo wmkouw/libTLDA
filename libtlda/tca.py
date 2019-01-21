@@ -7,7 +7,8 @@ from scipy.sparse.linalg import eigs
 from scipy.spatial.distance import cdist
 import sklearn as sk
 from sklearn.svm import LinearSVC
-from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, \
+    RidgeClassifier, RidgeClassifierCV
 from sklearn.model_selection import cross_val_predict
 from os.path import basename
 
@@ -21,14 +22,20 @@ class TransferComponentClassifier(object):
     Methods contain component analysis and general utilities.
     """
 
-    def __init__(self, loss='logistic', l2=1.0, mu=1.0, num_components=1,
-                 kernel_type='rbf', bandwidth=1.0, order=2.0):
+    def __init__(self,
+                 loss_function='logistic',
+                 l2_regularization=1.0,
+                 mu=1.0,
+                 num_components=1,
+                 kernel_type='rbf',
+                 bandwidth=1.0,
+                 order=2.0):
         """
         Select a particular type of transfer component classifier.
 
         Parameters
         ----------
-        loss : str
+        loss_function : str
             loss function for weighted classifier, options: 'logistic',
             'quadratic', 'hinge' (def: 'logistic')
         l2 : float
@@ -56,8 +63,8 @@ class TransferComponentClassifier(object):
             whether the classifier has been trained on data already
 
         """
-        self.loss = loss
-        self.l2 = l2
+        self.loss = loss_function
+        self.l2 = l2_regularization
         self.mu = mu
         self.num_components = num_components
 
@@ -66,15 +73,37 @@ class TransferComponentClassifier(object):
         self.order = order
 
         # Initialize untrained classifiers
-        if self.loss == 'logistic':
-            # Logistic regression model
-            self.clf = LogisticRegression()
-        elif self.loss == 'quadratic':
-            # Least-squares model
-            self.clf = LinearRegression()
-        elif self.loss == 'hinge':
+        if self.loss in ('lr', 'logr', 'logistic'):
+
+            if l2_regularization:
+
+                # Logistic regression model with fixed regularization
+                self.clf = LogisticRegression(C=self.l2, solver='lbfgs')
+
+            else:
+                # Logistic regression model, cross-validated for regularization
+                self.clf = LogisticRegressionCV(cv=5, solver='lbfgs')
+
+        elif self.loss in ('squared', 'qd', 'quadratic'):
+
+            if l2_regularization:
+
+                # Least-squares model with fixed regularization
+                self.clf = RidgeClassifier(alpha=self.l2)
+
+            else:
+                # Least-squares model, cross-validated for regularization
+                self.clf = RidgeClassifierCV(cv=5)
+
+        elif self.loss in ('hinge', 'linsvm', 'linsvc'):
+
             # Linear support vector machine
-            self.clf = LinearSVC()
+            self.clf = LinearSVC(C=self.l2)
+
+        elif self.loss in ('rbfsvc', 'rbfsvm'):
+
+            # Radial basis function support vector machine
+            self.clf = SVC(C=self.l2)
         else:
             # Other loss functions are not implemented
             raise NotImplementedError
@@ -247,13 +276,18 @@ class TransferComponentClassifier(object):
         X = np.dot(K[:N, :], self.C)
 
         # Train a weighted classifier
-        if self.loss == 'logistic':
+        if self.loss in ('lr', 'logr', 'logistic'):
+
             # Logistic regression model with sample weights
             self.clf.fit(X, y)
-        elif self.loss == 'quadratic':
+
+        elif self.loss in ('squared', 'qd', 'quadratic'):
+
             # Least-squares model with sample weights
             self.clf.fit(X, y)
-        elif self.loss == 'hinge':
+
+        elif self.loss in ('hinge', 'linsvm', 'linsvc'):
+
             # Linear support vector machine with sample weights
             self.clf.fit(X, y)
         else:

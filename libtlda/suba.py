@@ -9,7 +9,8 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.decomposition import PCA
 from sklearn.svm import LinearSVC, SVC
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, \
+    RidgeClassifier, RidgeClassifierCV
 from sklearn.model_selection import cross_val_predict
 from sklearn.calibration import CalibratedClassifierCV
 from os.path import basename
@@ -65,7 +66,7 @@ class SubspaceAlignedClassifier(object):
             if l2_regularization:
 
                 # Logistic regression model
-                self.clf = LogisticRegression(C=self.l2)
+                self.clf = LogisticRegression(C=self.l2, solver='lbfgs')
 
             else:
                 # Logistic regression model
@@ -73,8 +74,14 @@ class SubspaceAlignedClassifier(object):
 
         elif self.loss in ('squared', 'qd', 'quadratic'):
 
-            # Least-squares model
-            self.clf = Ridge(alpha=self.l2)
+            if l2_regularization:
+
+                # Least-squares model with fixed regularization
+                self.clf = RidgeClassifier(alpha=self.l2)
+
+            else:
+                # Least-squares model, cross-validated for regularization
+                self.clf = RidgeClassifierCV(cv=5)
 
         elif self.loss in ('hinge', 'linsvm', 'linsvc'):
 
@@ -486,7 +493,7 @@ class SemiSubspaceAlignedClassifier(object):
             if l2_regularization:
 
                 # Logistic regression model
-                self.clf = LogisticRegression(C=self.l2)
+                self.clf = LogisticRegression(C=self.l2, solver='lbfgs')
 
             else:
                 # Logistic regression model
@@ -494,8 +501,14 @@ class SemiSubspaceAlignedClassifier(object):
 
         elif self.loss in ('squared', 'qd', 'quadratic'):
 
-            # Least-squares model
-            self.clf = Ridge(alpha=self.l2)
+            if l2_regularization:
+
+                # Least-squares model with fixed regularization
+                self.clf = RidgeClassifier(alpha=self.l2)
+
+            else:
+                # Least-squares model, cross-validated for regularization
+                self.clf = RidgeClassifierCV(cv=5)
 
         elif self.loss in ('hinge', 'linsvm', 'linsvc'):
 
