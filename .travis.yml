@@ -1,4 +1,4 @@
-language: python
+language: generic
 dist: trusty
 sudo: false
 
