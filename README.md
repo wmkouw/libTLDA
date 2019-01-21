@@ -19,7 +19,7 @@ This package contains the following classifiers:
 - Target Contrastive Pessimistic Risk [(Kouw et al., 2017)](https://arxiv.org/abs/1706.08082) (python-only)
 
 ## Python
-![Python version](https://img.shields.io/badge/python-2.7%2C%203.4%2C%203.5%2C%203.6-blue.svg)
+![Python version](https://img.shields.io/badge/python-2.7%2C%203.5%2C%203.6%2C%203.7-blue.svg)
 
 #### Installation
 
