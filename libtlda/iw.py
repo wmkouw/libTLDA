@@ -93,6 +93,9 @@ class ImportanceWeightedClassifier(object):
         # Dimensionality of training data
         self.train_data_dim = ''
 
+        # Initalize empty weight attribute
+        self.iw = []
+
     def iwe_ratio_gaussians(self, X, Z):
         """
         Estimate importance weights based on a ratio of Gaussian distributions.
@@ -363,15 +366,15 @@ class ImportanceWeightedClassifier(object):
 
         # Find importance-weights
         if self.iwe == 'lr':
-            w = self.iwe_logistic_discrimination(X, Z)
+            self.iw = self.iwe_logistic_discrimination(X, Z)
         elif self.iwe == 'rg':
-            w = self.iwe_ratio_gaussians(X, Z)
+            self.iw = self.iwe_ratio_gaussians(X, Z)
         elif self.iwe == 'nn':
-            w = self.iwe_nearest_neighbours(X, Z)
+            self.iw = self.iwe_nearest_neighbours(X, Z)
         elif self.iwe == 'kde':
-            w = self.iwe_kernel_densities(X, Z)
+            self.iw = self.iwe_kernel_densities(X, Z)
         elif self.iwe == 'kmm':
-            w = self.iwe_kernel_mean_matching(X, Z)
+            self.iw = self.iwe_kernel_mean_matching(X, Z)
         else:
             raise NotImplementedError('Estimator not implemented.')
 
@@ -379,7 +382,7 @@ class ImportanceWeightedClassifier(object):
         if self.loss in ['logistic', 'quadratic', 'hinge']:
 
             # Fit classifier with sample weights
-            self.clf.fit(X, y, w)
+            self.clf.fit(X, y, self.iw)
 
         else:
             # Other loss functions are not implemented
@@ -464,7 +467,17 @@ class ImportanceWeightedClassifier(object):
 
     def get_params(self):
         """Get classifier parameters."""
-        return self.clf.get_params()
+        if self.is_trained:
+            return self.clf.get_params()
+        else:
+            raise ValueError('Classifier is not yet trained.')
+
+    def get_weights(self):
+        """Get estimated importance weights."""
+        if self.is_trained:
+            return self.iw
+        else:
+            raise ValueError('Classifier is not yet trained.')
 
     def is_trained(self):
         """Check whether classifier is trained."""

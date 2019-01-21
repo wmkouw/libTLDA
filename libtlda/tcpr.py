@@ -482,12 +482,12 @@ class TargetContrastivePessimisticClassifier(object):
         TCPRt = np.inf
         for t in range(self.max_iter):
 
-            # Maximization phase
+            '''Maximization phase'''
 
             # Estimate parameters using TCP risk
             theta_tcp = self.discriminant_parameters(Z, q)
 
-            # Minimization phase
+            '''Minimization phase'''
 
             # Compute loss under new parameters
             L_tcp = self.neg_log_likelihood(Z, theta_tcp)
@@ -505,7 +505,7 @@ class TargetContrastivePessimisticClassifier(object):
             for m in range(M):
                 q[m, :] = self.project_simplex(q[m, :])
 
-            # Monitor progress
+            ''''Monitor progress'''
 
             # Risks of current parameters
             R_tcp = self.risk(Z, theta_tcp, q)

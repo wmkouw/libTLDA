@@ -18,8 +18,8 @@ class StructuralCorrespondenceClassifier(object):
     """
     Class of classifiers based on structural correspondence learning.
 
-    Methods contain different importance-weight estimators and different loss
-    functions.
+    Methods consist of a way to augment features, and a Huber loss function
+    plus gradient.
     """
 
     def __init__(self, loss='logistic', l2=1.0, num_pivots=1,
