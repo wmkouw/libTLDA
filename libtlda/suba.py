@@ -160,10 +160,10 @@ class SubspaceAlignedClassifier(object):
         epsilon = 1e-5
 
         # ZCA whitening matrix
-        W = U @ np.diag(1.0 / np.sqrt(S + epsilon)) @ V
+        W = np.dot(U, np.dot(np.diag(1.0 / np.sqrt(S + epsilon)), V))
 
         # Apply whitening matrix
-        return X @ W
+        return np.dot(X, W)
 
     def align_data(self, X, Z, CX, CZ, V):
         """
@@ -191,13 +191,13 @@ class SubspaceAlignedClassifier(object):
 
         """
         # Map source data onto source principal components
-        XC = X @ CX
+        XC = np.dot(X, CX)
 
         # Align projected source data to target components
-        XV = XC @ V
+        XV = np.dot(XC, V)
 
         # Map target data onto target principal components
-        ZC = Z @ CZ
+        ZC = np.dot(Z, CZ)
 
         return XV, ZC
 
@@ -249,7 +249,7 @@ class SubspaceAlignedClassifier(object):
         CZ = vecZ[:, np.argsort(np.real(valZ))[::-1]]
 
         # Optimal linear transformation matrix
-        V = CX.T @ CZ
+        V = np.dot(CX.T, CZ)
 
         # Return transformation matrix and principal component coefficients
         return V, CX, CZ
@@ -412,7 +412,7 @@ class SubspaceAlignedClassifier(object):
             Z = st.zscore(Z)
 
         # Map new target data onto target subspace
-        Z = Z @ self.target_subspace
+        Z = np.dot(Z, self.target_subspace)
 
         # Use Platt scaling for ridge regressor
         if self.loss in ('squared', 'qd', 'quadratic'):
@@ -590,7 +590,7 @@ class SemiSubspaceAlignedClassifier(object):
         muX = np.mean(X, axis=0, keepdims=1)
 
         # Compute covariance matrix without regularization
-        SX = (X - muX).T @ (X - muX) / N
+        SX = np.dot((X - muX).T, (X - muX)) / N
 
         # Initialize regularization parameter
         reg = 1e-6
@@ -599,7 +599,7 @@ class SemiSubspaceAlignedClassifier(object):
         while not self.is_pos_def(SX):
 
             # Compute covariance matrix with regularization
-            SX = (X - muX).T @ (X - muX) / N + reg*np.eye(X.shape[1])
+            SX = np.dot((X - muX).T, (X - muX)) / N + reg*np.eye(X.shape[1])
 
             # Increment reg
             reg *= 10
@@ -653,7 +653,7 @@ class SemiSubspaceAlignedClassifier(object):
         for k in range(K):
 
             # Project the k-th class
-            XV[Y == k, :] = X[Y == k, :] @ CX[k] @ V[k]
+            XV[Y == k, :] = np.dot(np.dot(X[Y == k, :], CX[k]), V[k])
 
             # Indices of all target samples with label k
             uk = u[u[:, 1] == k, 0]
@@ -665,10 +665,10 @@ class SemiSubspaceAlignedClassifier(object):
             XV[Y == k, :] -= np.mean(XV[Y == k, :], axis=0, keepdims=1)
 
             # Center the projected class on mean of labeled target samples
-            XV[Y == k, :] += muZk @ CZ
+            XV[Y == k, :] += np.dot(muZk, CZ)
 
         # Project target data onto components
-        Z = Z @ CZ
+        Z = np.dot(Z, CZ)
 
         return XV, Z
 
@@ -766,7 +766,7 @@ class SemiSubspaceAlignedClassifier(object):
             vecZ = vecZ[:, np.argsort(np.real(valZ))[::-1]]
 
             # Aligned source components
-            V[k] = CX[k].T @ vecZ
+            V[k] = np.dot(CX[k].T, vecZ)
 
         # Return transformation matrix and principal component coefficients
         return V, CX, CZ
@@ -933,7 +933,7 @@ class SemiSubspaceAlignedClassifier(object):
             Z = st.zscore(Z)
 
         # Map new target data onto target subspace
-        Z = Z @ self.target_subspace
+        Z = np.dot(Z, self.target_subspace)
 
         # Use Platt scaling for ridge regressor
         if self.loss in ('squared', 'qd', 'quadratic'):

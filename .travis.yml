@@ -1,4 +1,4 @@
-language: generic
+language: python
 dist: trusty
 sudo: false
 
@@ -16,6 +16,13 @@ env:
     - MINCONDA_VERSION="latest"
     - MINCONDA_LINUX="Linux-x86_64"
     - MINCONDA_OSX="MacOSX-x86_64"
+
+addons:
+  apt:
+    packages:
+      - libblas-dev
+      - liblapack-dev
+      - gfortran
 
 before_install:
   - if [[ "$PYTHON_VERSION" == "2.7" ]]; then
@@ -37,7 +44,7 @@ before_install:
   - conda update -q conda
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       conda install python.app;
-    fi  
+    fi
   - conda create -q -n test-environment python=$PYTHON_VERSION pip numpy matplotlib
   - source activate test-environment
   - "pip install -q pytest"
@@ -54,4 +61,4 @@ script:
 after_script:
   - "pip install scrutinizer-ocular"
   - "ocular"
-  
+
